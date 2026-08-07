@@ -1,0 +1,20 @@
+[
+  {"sample_id": "a-gw-lat-1", "series": "gateway", "metric": "latency_p99", "value": 940, "ts": 100, "suppressed": false, "note": "spike"},
+  {"sample_id": "a-gw-lat-2", "series": "gateway", "metric": "latency_p99", "value": 910, "ts": 150, "suppressed": false, "note": "still high"},
+  {"sample_id": "a-gw-lat-3", "series": "gateway", "metric": "latency_p99", "value": 940, "ts": 200, "suppressed": false, "note": "spike again"},
+  {"sample_id": "a-gw-lat-4", "series": "gateway", "metric": "latency_p99", "value": "bad", "ts": 200, "suppressed": false, "note": "null probe"},
+  {"sample_id": "a-gw-err-1", "series": "gateway", "metric": "error_rate", "value": 410, "ts": 240, "suppressed": false, "note": "errors"},
+  {"sample_id": "a-gw-err-2", "series": "gateway", "metric": "error_rate", "value": 455, "ts": 280, "suppressed": false, "note": "errors up"},
+  {"sample_id": "a-gw-sat-1", "series": "gateway", "metric": "saturation", "value": 300, "ts": 320, "suppressed": false, "note": "mild"},
+  {"sample_id": "a-gw-sat-2", "series": "gateway", "metric": "saturation", "value": 330, "ts": 360, "suppressed": false, "note": "mild"},
+  {"sample_id": "a-bi-sat-1", "series": "billing", "metric": "saturation", "value": 640, "ts": 100, "suppressed": false, "note": "flush"},
+  {"sample_id": "a-bi-sat-2", "series": "billing", "metric": "saturation", "value": 720, "ts": 140, "suppressed": false, "note": "flush heavy"},
+  {"sample_id": "a-bi-sat-2", "series": "billing", "metric": "saturation", "value": 300, "ts": 140, "suppressed": false, "note": "watchdog dip re-emit"},
+  {"sample_id": "a-bi-sat-3", "series": "billing", "metric": "saturation", "value": 700, "ts": 185, "suppressed": false, "note": "flush"},
+  {"sample_id": "a-bi-lat-1", "series": "billing", "metric": "latency_p99", "value": 620, "ts": 220, "suppressed": false, "note": "slow"},
+  {"sample_id": "a-bi-lat-2", "series": "billing", "metric": "latency_p99", "value": 660, "ts": 260, "suppressed": false, "note": "slow"},
+  {"sample_id": "a-se-lat-1", "series": "search", "metric": "latency_p99", "value": 540, "ts": 120, "suppressed": false, "note": "warm"},
+  {"sample_id": "a-se-lat-2", "series": "search", "metric": "latency_p99", "value": 560, "ts": 160, "suppressed": false, "note": "warm"},
+  {"sample_id": "a-se-qd-1", "series": "search", "metric": "queue_depth", "value": 80, "ts": 200, "suppressed": false, "note": "backlog"},
+  {"sample_id": "a-se-qd-2", "series": "search", "metric": "queue_depth", "value": 60, "ts": 240, "suppressed": true, "note": "muted backlog"}
+]

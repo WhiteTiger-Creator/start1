@@ -1,0 +1,128 @@
+[
+  {
+    "sample_id": "gw-lat-1",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 820,
+    "ts": 100,
+    "suppressed": false,
+    "note": "cold cache spike"
+  },
+  {
+    "sample_id": "gw-lat-2",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 760,
+    "ts": 140,
+    "suppressed": false,
+    "note": "recovering"
+  },
+  {
+    "sample_id": "gw-lat-3",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 640,
+    "ts": 180,
+    "suppressed": false,
+    "note": "peak pending confirmation"
+  },
+  {
+    "sample_id": "gw-lat-4",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": "n/a",
+    "ts": 180,
+    "suppressed": false,
+    "note": "probe gap null"
+  },
+  {
+    "sample_id": "gw-lat-5",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 880,
+    "ts": 230,
+    "suppressed": false,
+    "note": "second peak tie"
+  },
+  {
+    "sample_id": "gw-lat-6",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 999,
+    "ts": 160,
+    "suppressed": true,
+    "note": "synthetic probe muted"
+  },
+  {
+    "sample_id": "rollout-probe-1",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 1200,
+    "ts": 210,
+    "suppressed": false,
+    "note": "rollout load probe"
+  },
+  {
+    "sample_id": "gw-err-1",
+    "series": "gateway",
+    "metric": "error_rate",
+    "value": 300,
+    "ts": 250,
+    "suppressed": false,
+    "note": "5xx wave errors per minute"
+  },
+  {
+    "sample_id": "gw-err-2",
+    "series": "gateway",
+    "metric": "error_rate",
+    "value": 520,
+    "ts": 290,
+    "suppressed": false,
+    "note": "5xx wave crest"
+  },
+  {
+    "sample_id": "gw-err-3",
+    "series": "gateway",
+    "metric": "error_rate",
+    "value": 480,
+    "ts": 330,
+    "suppressed": false,
+    "note": "settling"
+  },
+  {
+    "sample_id": "gw-sat-1",
+    "series": "gateway",
+    "metric": "saturation",
+    "value": 700,
+    "ts": 360,
+    "suppressed": false,
+    "note": "pool pressure"
+  },
+  {
+    "sample_id": "gw-sat-2",
+    "series": "gateway",
+    "metric": "saturation",
+    "value": 500,
+    "ts": 400,
+    "suppressed": false,
+    "note": "pool pressure rising provisional"
+  },
+  {
+    "sample_id": "gw-sat-3",
+    "series": "gateway",
+    "metric": "saturation",
+    "value": 690,
+    "ts": 440,
+    "suppressed": false,
+    "note": "pool pressure easing"
+  },
+  {
+    "sample_id": "gw-qd-1",
+    "series": "gateway",
+    "metric": "queue_depth",
+    "value": 40,
+    "ts": 470,
+    "suppressed": false,
+    "note": "backlog"
+  }
+]

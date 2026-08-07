@@ -1,0 +1,13 @@
+[
+  {"source_series": "gateway", "target_series": "checkout", "weight": 8},
+  {"source_series": "gateway", "target_series": "search", "weight": 3},
+  {"source_series": "checkout", "target_series": "billing", "weight": 6},
+  {"source_series": "checkout", "target_series": "cache", "weight": 9},
+  {"source_series": "search", "target_series": "billing", "weight": 7},
+  {"source_series": "billing", "target_series": "ledger-svc", "weight": 5},
+  {"source_series": "billing", "target_series": "cache", "weight": 4},
+  {"source_series": "cache", "target_series": "ledger-svc", "weight": 2},
+  {"source_series": "GATEWAY", "target_series": "checkout", "weight": 5},
+  {"source_series": "cache", "target_series": "cache", "weight": 9},
+  {"source_series": "billing", "target_series": "ledger-svc", "weight": 0}
+]

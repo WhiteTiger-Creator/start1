@@ -1,0 +1,21 @@
+{
+  "default": {
+    "admission_min": 6,
+    "escalate_ledger_min": 24,
+    "escalate_exposure_min": 20,
+    "escalate_stability_min": 30,
+    "escalate_peak_min": 900,
+    "review_ledger_min": 12,
+    "review_exposure_min": 11,
+    "review_frame_peak_min": 500
+  },
+  "metric_overrides": {
+    "error_rate": {
+      "escalate_peak_min": 90
+    },
+    "saturation": {
+      "review_frame_peak_min": 650,
+      "admission_min": 5
+    }
+  }
+}

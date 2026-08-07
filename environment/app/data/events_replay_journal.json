@@ -1,0 +1,63 @@
+[
+  {
+    "journal_seq": 1,
+    "journal_op": "append",
+    "sample_id": "gw-lat-3",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 880,
+    "ts": 180,
+    "suppressed": false,
+    "note": "peak"
+  },
+  {
+    "journal_seq": 2,
+    "journal_op": "append",
+    "sample_id": "se-lat-3",
+    "series": "search",
+    "metric": "latency_p99",
+    "value": 540,
+    "ts": 200,
+    "suppressed": false,
+    "note": "index warm"
+  },
+  {
+    "journal_seq": 3,
+    "journal_op": "retract",
+    "sample_id": "rollout-probe-1",
+    "reason": "rollout synthetic load probe, not a production sample"
+  },
+  {
+    "journal_seq": 4,
+    "journal_op": "append",
+    "sample_id": "ca-sat-2",
+    "series": "cache",
+    "metric": "saturation",
+    "value": 320,
+    "ts": 140,
+    "suppressed": false,
+    "note": "modest pool use"
+  },
+  {
+    "journal_seq": 5,
+    "journal_op": "append",
+    "sample_id": "gw-sat-2",
+    "series": "gateway",
+    "metric": "saturation",
+    "value": 760,
+    "ts": 400,
+    "suppressed": false,
+    "note": "pool pressure rising"
+  },
+  {
+    "journal_seq": 6,
+    "journal_op": "append",
+    "sample_id": "ca-sat-3",
+    "series": "cache",
+    "metric": "saturation",
+    "value": 290,
+    "ts": 180,
+    "suppressed": false,
+    "note": "modest pool use easing"
+  }
+]

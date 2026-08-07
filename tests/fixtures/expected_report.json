@@ -1,0 +1,1917 @@
+{
+  "snapshot": [
+    {
+      "sample_id": "gw-lat-1",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 820,
+      "ts": 100,
+      "suppressed": false,
+      "note": "cold cache spike"
+    },
+    {
+      "sample_id": "gw-lat-2",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 760,
+      "ts": 140,
+      "suppressed": false,
+      "note": "recovering"
+    },
+    {
+      "sample_id": "gw-lat-3",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 640,
+      "ts": 180,
+      "suppressed": false,
+      "note": "peak pending confirmation"
+    },
+    {
+      "sample_id": "gw-lat-4",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": "n/a",
+      "ts": 180,
+      "suppressed": false,
+      "note": "probe gap null"
+    },
+    {
+      "sample_id": "gw-lat-5",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 880,
+      "ts": 230,
+      "suppressed": false,
+      "note": "second peak tie"
+    },
+    {
+      "sample_id": "gw-lat-6",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 999,
+      "ts": 160,
+      "suppressed": true,
+      "note": "synthetic probe muted"
+    },
+    {
+      "sample_id": "rollout-probe-1",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 1200,
+      "ts": 210,
+      "suppressed": false,
+      "note": "rollout load probe"
+    },
+    {
+      "sample_id": "gw-err-1",
+      "series": "gateway",
+      "metric": "error_rate",
+      "value": 300,
+      "ts": 250,
+      "suppressed": false,
+      "note": "5xx wave errors per minute"
+    },
+    {
+      "sample_id": "gw-err-2",
+      "series": "gateway",
+      "metric": "error_rate",
+      "value": 520,
+      "ts": 290,
+      "suppressed": false,
+      "note": "5xx wave crest"
+    },
+    {
+      "sample_id": "gw-err-3",
+      "series": "gateway",
+      "metric": "error_rate",
+      "value": 480,
+      "ts": 330,
+      "suppressed": false,
+      "note": "settling"
+    },
+    {
+      "sample_id": "gw-sat-1",
+      "series": "gateway",
+      "metric": "saturation",
+      "value": 700,
+      "ts": 360,
+      "suppressed": false,
+      "note": "pool pressure"
+    },
+    {
+      "sample_id": "gw-sat-2",
+      "series": "gateway",
+      "metric": "saturation",
+      "value": 500,
+      "ts": 400,
+      "suppressed": false,
+      "note": "pool pressure rising provisional"
+    },
+    {
+      "sample_id": "gw-sat-3",
+      "series": "gateway",
+      "metric": "saturation",
+      "value": 690,
+      "ts": 440,
+      "suppressed": false,
+      "note": "pool pressure easing"
+    },
+    {
+      "sample_id": "gw-qd-1",
+      "series": "gateway",
+      "metric": "queue_depth",
+      "value": 40,
+      "ts": 470,
+      "suppressed": false,
+      "note": "backlog"
+    },
+    {
+      "sample_id": "gw-qd-2",
+      "series": "gateway",
+      "metric": "queue_depth",
+      "value": 46,
+      "ts": 500,
+      "suppressed": false,
+      "note": "backlog grew"
+    },
+    {
+      "sample_id": "co-lat-1",
+      "series": "checkout",
+      "metric": "latency_p99",
+      "value": 650,
+      "ts": 100,
+      "suppressed": false,
+      "note": "baseline"
+    },
+    {
+      "sample_id": "co-lat-2",
+      "series": "checkout",
+      "metric": "latency_p99",
+      "value": 700,
+      "ts": 150,
+      "suppressed": false,
+      "note": "slow query"
+    },
+    {
+      "sample_id": "co-lat-2",
+      "series": "checkout",
+      "metric": "latency_p99",
+      "value": 900,
+      "ts": 150,
+      "suppressed": false,
+      "note": "watchdog re-emit inflated"
+    },
+    {
+      "sample_id": "co-lat-3",
+      "series": "checkout",
+      "metric": "latency_p99",
+      "value": 690,
+      "ts": 205,
+      "suppressed": false,
+      "note": "recovered"
+    },
+    {
+      "sample_id": "co-err-1",
+      "series": "checkout",
+      "metric": "error_rate",
+      "value": 70,
+      "ts": 230,
+      "suppressed": false,
+      "note": "declines"
+    },
+    {
+      "sample_id": "co-err-2",
+      "series": "checkout",
+      "metric": "error_rate",
+      "value": 74,
+      "ts": 270,
+      "suppressed": false,
+      "note": "declines slower"
+    },
+    {
+      "sample_id": "se-lat-1",
+      "series": "search",
+      "metric": "latency_p99",
+      "value": 550,
+      "ts": 120,
+      "suppressed": false,
+      "note": "index warmup"
+    },
+    {
+      "sample_id": "se-lat-2",
+      "series": "search",
+      "metric": "latency_p99",
+      "value": 560,
+      "ts": 160,
+      "suppressed": false,
+      "note": "index warmup"
+    },
+    {
+      "sample_id": "bi-sat-1",
+      "series": "billing",
+      "metric": "saturation",
+      "value": 610,
+      "ts": 100,
+      "suppressed": false,
+      "note": "ledger flush"
+    },
+    {
+      "sample_id": "bi-sat-2",
+      "series": "billing",
+      "metric": "saturation",
+      "value": 700,
+      "ts": 150,
+      "suppressed": false,
+      "note": "ledger flush heavy"
+    },
+    {
+      "sample_id": "bi-sat-3",
+      "series": "billing",
+      "metric": "saturation",
+      "value": 720,
+      "ts": 190,
+      "suppressed": false,
+      "note": "ledger flush peak"
+    },
+    {
+      "sample_id": "ca-err-1",
+      "series": "cache",
+      "metric": "error_rate",
+      "value": 88,
+      "ts": 100,
+      "suppressed": false,
+      "note": "evictions"
+    },
+    {
+      "sample_id": "ca-err-2",
+      "series": "cache",
+      "metric": "error_rate",
+      "value": 91,
+      "ts": 130,
+      "suppressed": false,
+      "note": "evictions rising"
+    },
+    {
+      "sample_id": "ca-err-3",
+      "series": "cache",
+      "metric": "error_rate",
+      "value": 500,
+      "ts": 150,
+      "suppressed": true,
+      "note": "synthetic canary muted"
+    },
+    {
+      "sample_id": "ca-sat-1",
+      "series": "cache",
+      "metric": "saturation",
+      "value": 300,
+      "ts": 100,
+      "suppressed": false,
+      "note": "modest pool use"
+    }
+  ],
+  "journal": [
+    {
+      "journal_seq": 1,
+      "journal_op": "append",
+      "sample_id": "gw-lat-3",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 880,
+      "ts": 180,
+      "suppressed": false,
+      "note": "peak"
+    },
+    {
+      "journal_seq": 2,
+      "journal_op": "append",
+      "sample_id": "se-lat-3",
+      "series": "search",
+      "metric": "latency_p99",
+      "value": 540,
+      "ts": 200,
+      "suppressed": false,
+      "note": "index warm"
+    },
+    {
+      "journal_seq": 3,
+      "journal_op": "retract",
+      "sample_id": "rollout-probe-1",
+      "reason": "rollout synthetic load probe, not a production sample"
+    },
+    {
+      "journal_seq": 4,
+      "journal_op": "append",
+      "sample_id": "ca-sat-2",
+      "series": "cache",
+      "metric": "saturation",
+      "value": 320,
+      "ts": 140,
+      "suppressed": false,
+      "note": "modest pool use"
+    },
+    {
+      "journal_seq": 5,
+      "journal_op": "append",
+      "sample_id": "gw-sat-2",
+      "series": "gateway",
+      "metric": "saturation",
+      "value": 760,
+      "ts": 400,
+      "suppressed": false,
+      "note": "pool pressure rising"
+    },
+    {
+      "journal_seq": 6,
+      "journal_op": "append",
+      "sample_id": "ca-sat-3",
+      "series": "cache",
+      "metric": "saturation",
+      "value": 290,
+      "ts": 180,
+      "suppressed": false,
+      "note": "modest pool use easing"
+    }
+  ],
+  "shipped_truncated_stream": [
+    {
+      "sample_id": "gw-lat-1",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 820,
+      "ts": 100,
+      "suppressed": false,
+      "note": "cold cache spike"
+    },
+    {
+      "sample_id": "gw-lat-2",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 760,
+      "ts": 140,
+      "suppressed": false,
+      "note": "recovering"
+    },
+    {
+      "sample_id": "gw-lat-3",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 640,
+      "ts": 180,
+      "suppressed": false,
+      "note": "peak pending confirmation"
+    },
+    {
+      "sample_id": "gw-lat-4",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": "n/a",
+      "ts": 180,
+      "suppressed": false,
+      "note": "probe gap null"
+    },
+    {
+      "sample_id": "gw-lat-5",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 880,
+      "ts": 230,
+      "suppressed": false,
+      "note": "second peak tie"
+    },
+    {
+      "sample_id": "gw-lat-6",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 999,
+      "ts": 160,
+      "suppressed": true,
+      "note": "synthetic probe muted"
+    },
+    {
+      "sample_id": "rollout-probe-1",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 1200,
+      "ts": 210,
+      "suppressed": false,
+      "note": "rollout load probe"
+    },
+    {
+      "sample_id": "gw-err-1",
+      "series": "gateway",
+      "metric": "error_rate",
+      "value": 300,
+      "ts": 250,
+      "suppressed": false,
+      "note": "5xx wave errors per minute"
+    },
+    {
+      "sample_id": "gw-err-2",
+      "series": "gateway",
+      "metric": "error_rate",
+      "value": 520,
+      "ts": 290,
+      "suppressed": false,
+      "note": "5xx wave crest"
+    },
+    {
+      "sample_id": "gw-err-3",
+      "series": "gateway",
+      "metric": "error_rate",
+      "value": 480,
+      "ts": 330,
+      "suppressed": false,
+      "note": "settling"
+    },
+    {
+      "sample_id": "gw-sat-1",
+      "series": "gateway",
+      "metric": "saturation",
+      "value": 700,
+      "ts": 360,
+      "suppressed": false,
+      "note": "pool pressure"
+    },
+    {
+      "sample_id": "gw-sat-2",
+      "series": "gateway",
+      "metric": "saturation",
+      "value": 500,
+      "ts": 400,
+      "suppressed": false,
+      "note": "pool pressure rising provisional"
+    },
+    {
+      "sample_id": "gw-sat-3",
+      "series": "gateway",
+      "metric": "saturation",
+      "value": 690,
+      "ts": 440,
+      "suppressed": false,
+      "note": "pool pressure easing"
+    },
+    {
+      "sample_id": "gw-qd-1",
+      "series": "gateway",
+      "metric": "queue_depth",
+      "value": 40,
+      "ts": 470,
+      "suppressed": false,
+      "note": "backlog"
+    }
+  ],
+  "recovered_stream": [
+    {
+      "sample_id": "gw-lat-1",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 820,
+      "ts": 100,
+      "suppressed": false,
+      "note": "cold cache spike"
+    },
+    {
+      "sample_id": "gw-lat-2",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 760,
+      "ts": 140,
+      "suppressed": false,
+      "note": "recovering"
+    },
+    {
+      "sample_id": "gw-lat-3",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 880,
+      "ts": 180,
+      "suppressed": false,
+      "note": "peak"
+    },
+    {
+      "sample_id": "gw-lat-4",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": "n/a",
+      "ts": 180,
+      "suppressed": false,
+      "note": "probe gap null"
+    },
+    {
+      "sample_id": "gw-lat-5",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 880,
+      "ts": 230,
+      "suppressed": false,
+      "note": "second peak tie"
+    },
+    {
+      "sample_id": "gw-lat-6",
+      "series": "gateway",
+      "metric": "latency_p99",
+      "value": 999,
+      "ts": 160,
+      "suppressed": true,
+      "note": "synthetic probe muted"
+    },
+    {
+      "sample_id": "gw-err-1",
+      "series": "gateway",
+      "metric": "error_rate",
+      "value": 300,
+      "ts": 250,
+      "suppressed": false,
+      "note": "5xx wave errors per minute"
+    },
+    {
+      "sample_id": "gw-err-2",
+      "series": "gateway",
+      "metric": "error_rate",
+      "value": 520,
+      "ts": 290,
+      "suppressed": false,
+      "note": "5xx wave crest"
+    },
+    {
+      "sample_id": "gw-err-3",
+      "series": "gateway",
+      "metric": "error_rate",
+      "value": 480,
+      "ts": 330,
+      "suppressed": false,
+      "note": "settling"
+    },
+    {
+      "sample_id": "gw-sat-1",
+      "series": "gateway",
+      "metric": "saturation",
+      "value": 700,
+      "ts": 360,
+      "suppressed": false,
+      "note": "pool pressure"
+    },
+    {
+      "sample_id": "gw-sat-2",
+      "series": "gateway",
+      "metric": "saturation",
+      "value": 760,
+      "ts": 400,
+      "suppressed": false,
+      "note": "pool pressure rising"
+    },
+    {
+      "sample_id": "gw-sat-3",
+      "series": "gateway",
+      "metric": "saturation",
+      "value": 690,
+      "ts": 440,
+      "suppressed": false,
+      "note": "pool pressure easing"
+    },
+    {
+      "sample_id": "gw-qd-1",
+      "series": "gateway",
+      "metric": "queue_depth",
+      "value": 40,
+      "ts": 470,
+      "suppressed": false,
+      "note": "backlog"
+    },
+    {
+      "sample_id": "gw-qd-2",
+      "series": "gateway",
+      "metric": "queue_depth",
+      "value": 46,
+      "ts": 500,
+      "suppressed": false,
+      "note": "backlog grew"
+    },
+    {
+      "sample_id": "co-lat-1",
+      "series": "checkout",
+      "metric": "latency_p99",
+      "value": 650,
+      "ts": 100,
+      "suppressed": false,
+      "note": "baseline"
+    },
+    {
+      "sample_id": "co-lat-2",
+      "series": "checkout",
+      "metric": "latency_p99",
+      "value": 700,
+      "ts": 150,
+      "suppressed": false,
+      "note": "slow query"
+    },
+    {
+      "sample_id": "co-lat-2",
+      "series": "checkout",
+      "metric": "latency_p99",
+      "value": 900,
+      "ts": 150,
+      "suppressed": false,
+      "note": "watchdog re-emit inflated"
+    },
+    {
+      "sample_id": "co-lat-3",
+      "series": "checkout",
+      "metric": "latency_p99",
+      "value": 690,
+      "ts": 205,
+      "suppressed": false,
+      "note": "recovered"
+    },
+    {
+      "sample_id": "co-err-1",
+      "series": "checkout",
+      "metric": "error_rate",
+      "value": 70,
+      "ts": 230,
+      "suppressed": false,
+      "note": "declines"
+    },
+    {
+      "sample_id": "co-err-2",
+      "series": "checkout",
+      "metric": "error_rate",
+      "value": 74,
+      "ts": 270,
+      "suppressed": false,
+      "note": "declines slower"
+    },
+    {
+      "sample_id": "se-lat-1",
+      "series": "search",
+      "metric": "latency_p99",
+      "value": 550,
+      "ts": 120,
+      "suppressed": false,
+      "note": "index warmup"
+    },
+    {
+      "sample_id": "se-lat-2",
+      "series": "search",
+      "metric": "latency_p99",
+      "value": 560,
+      "ts": 160,
+      "suppressed": false,
+      "note": "index warmup"
+    },
+    {
+      "sample_id": "bi-sat-1",
+      "series": "billing",
+      "metric": "saturation",
+      "value": 610,
+      "ts": 100,
+      "suppressed": false,
+      "note": "ledger flush"
+    },
+    {
+      "sample_id": "bi-sat-2",
+      "series": "billing",
+      "metric": "saturation",
+      "value": 700,
+      "ts": 150,
+      "suppressed": false,
+      "note": "ledger flush heavy"
+    },
+    {
+      "sample_id": "bi-sat-3",
+      "series": "billing",
+      "metric": "saturation",
+      "value": 720,
+      "ts": 190,
+      "suppressed": false,
+      "note": "ledger flush peak"
+    },
+    {
+      "sample_id": "ca-err-1",
+      "series": "cache",
+      "metric": "error_rate",
+      "value": 88,
+      "ts": 100,
+      "suppressed": false,
+      "note": "evictions"
+    },
+    {
+      "sample_id": "ca-err-2",
+      "series": "cache",
+      "metric": "error_rate",
+      "value": 91,
+      "ts": 130,
+      "suppressed": false,
+      "note": "evictions rising"
+    },
+    {
+      "sample_id": "ca-err-3",
+      "series": "cache",
+      "metric": "error_rate",
+      "value": 500,
+      "ts": 150,
+      "suppressed": true,
+      "note": "synthetic canary muted"
+    },
+    {
+      "sample_id": "ca-sat-1",
+      "series": "cache",
+      "metric": "saturation",
+      "value": 300,
+      "ts": 100,
+      "suppressed": false,
+      "note": "modest pool use"
+    },
+    {
+      "sample_id": "se-lat-3",
+      "series": "search",
+      "metric": "latency_p99",
+      "value": 540,
+      "ts": 200,
+      "suppressed": false,
+      "note": "index warm"
+    },
+    {
+      "sample_id": "ca-sat-2",
+      "series": "cache",
+      "metric": "saturation",
+      "value": 320,
+      "ts": 140,
+      "suppressed": false,
+      "note": "modest pool use"
+    },
+    {
+      "sample_id": "ca-sat-3",
+      "series": "cache",
+      "metric": "saturation",
+      "value": 290,
+      "ts": 180,
+      "suppressed": false,
+      "note": "modest pool use easing"
+    }
+  ],
+  "primary": {
+    "summary": {
+      "schema_version": "obs-window-v1",
+      "raw_sample_count": 32,
+      "unique_sample_ids": 31,
+      "canonical_sample_count": 31,
+      "series_count": 5,
+      "partition_count": 10,
+      "suppressed_excluded_count": 2,
+      "tier_counts": {
+        "escalate": 3,
+        "review": 2,
+        "watch": 1
+      },
+      "total_span_ms": 745,
+      "total_bounded_running_sum": 12249,
+      "total_window_pressure": 83,
+      "total_ledger_adjusted_pressure": 93,
+      "longest_window_ms": 130,
+      "queued_window_count": 6,
+      "max_window_pressure": 15,
+      "max_ledger_adjusted_pressure": 16,
+      "max_stability_index": 24,
+      "max_exposure_score": 30,
+      "max_carry_out": 25
+    },
+    "windows": {
+      "billing": [
+        {
+          "start_ts": 100,
+          "end_ts": 190,
+          "span_ms": 90,
+          "sample_count": 3,
+          "canonical_sample_count": 3,
+          "metric": "saturation",
+          "peak_value": 720,
+          "bounded_running_sum": 2030,
+          "frame_peak": 720,
+          "frame_mean": 676,
+          "frame_first_value": 610,
+          "lag_fill_value": 700,
+          "leader_count": 1,
+          "rank_span": 3,
+          "window_pressure": 14,
+          "idle_gap": 0,
+          "carry_in": 0,
+          "carry_out": 15,
+          "ledger_adjusted_pressure": 14,
+          "stability_index": 18,
+          "exposure_reachable_series": [
+            "cache",
+            "ledger-svc"
+          ],
+          "exposure_score": 9,
+          "exposure_strongest_path": [
+            "billing",
+            "ledger-svc"
+          ],
+          "source_sample_ids": [
+            "bi-sat-1",
+            "bi-sat-2",
+            "bi-sat-3"
+          ]
+        }
+      ],
+      "cache": [
+        {
+          "start_ts": 100,
+          "end_ts": 130,
+          "span_ms": 30,
+          "sample_count": 2,
+          "canonical_sample_count": 3,
+          "metric": "error_rate",
+          "peak_value": 91,
+          "bounded_running_sum": 179,
+          "frame_peak": 91,
+          "frame_mean": 89,
+          "frame_first_value": 88,
+          "lag_fill_value": 88,
+          "leader_count": 1,
+          "rank_span": 2,
+          "window_pressure": 0,
+          "idle_gap": 0,
+          "carry_in": 0,
+          "carry_out": 1,
+          "ledger_adjusted_pressure": 0,
+          "stability_index": 2,
+          "exposure_reachable_series": [
+            "ledger-svc"
+          ],
+          "exposure_score": 2,
+          "exposure_strongest_path": [
+            "cache",
+            "ledger-svc"
+          ],
+          "source_sample_ids": [
+            "ca-err-1",
+            "ca-err-2"
+          ]
+        },
+        {
+          "start_ts": 100,
+          "end_ts": 180,
+          "span_ms": 80,
+          "sample_count": 3,
+          "canonical_sample_count": 3,
+          "metric": "saturation",
+          "peak_value": 320,
+          "bounded_running_sum": 910,
+          "frame_peak": 320,
+          "frame_mean": 303,
+          "frame_first_value": 300,
+          "lag_fill_value": 320,
+          "leader_count": 1,
+          "rank_span": 3,
+          "window_pressure": 6,
+          "idle_gap": 0,
+          "carry_in": 1,
+          "carry_out": 8,
+          "ledger_adjusted_pressure": 7,
+          "stability_index": 10,
+          "exposure_reachable_series": [
+            "ledger-svc"
+          ],
+          "exposure_score": 2,
+          "exposure_strongest_path": [
+            "cache",
+            "ledger-svc"
+          ],
+          "source_sample_ids": [
+            "ca-sat-1",
+            "ca-sat-2",
+            "ca-sat-3"
+          ]
+        }
+      ],
+      "checkout": [
+        {
+          "start_ts": 100,
+          "end_ts": 205,
+          "span_ms": 105,
+          "sample_count": 3,
+          "canonical_sample_count": 3,
+          "metric": "latency_p99",
+          "peak_value": 700,
+          "bounded_running_sum": 2040,
+          "frame_peak": 700,
+          "frame_mean": 680,
+          "frame_first_value": 650,
+          "lag_fill_value": 700,
+          "leader_count": 1,
+          "rank_span": 3,
+          "window_pressure": 14,
+          "idle_gap": 0,
+          "carry_in": 0,
+          "carry_out": 17,
+          "ledger_adjusted_pressure": 14,
+          "stability_index": 19,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "ledger-svc"
+          ],
+          "exposure_score": 20,
+          "exposure_strongest_path": [
+            "checkout",
+            "cache"
+          ],
+          "source_sample_ids": [
+            "co-lat-1",
+            "co-lat-2",
+            "co-lat-3"
+          ]
+        },
+        {
+          "start_ts": 230,
+          "end_ts": 270,
+          "span_ms": 40,
+          "sample_count": 2,
+          "canonical_sample_count": 2,
+          "metric": "error_rate",
+          "peak_value": 74,
+          "bounded_running_sum": 144,
+          "frame_peak": 74,
+          "frame_mean": 72,
+          "frame_first_value": 70,
+          "lag_fill_value": 70,
+          "leader_count": 1,
+          "rank_span": 2,
+          "window_pressure": 0,
+          "idle_gap": 25,
+          "carry_in": 4,
+          "carry_out": 7,
+          "ledger_adjusted_pressure": 1,
+          "stability_index": 5,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "ledger-svc"
+          ],
+          "exposure_score": 20,
+          "exposure_strongest_path": [
+            "checkout",
+            "cache"
+          ],
+          "source_sample_ids": [
+            "co-err-1",
+            "co-err-2"
+          ]
+        }
+      ],
+      "gateway": [
+        {
+          "start_ts": 100,
+          "end_ts": 230,
+          "span_ms": 130,
+          "sample_count": 5,
+          "canonical_sample_count": 6,
+          "metric": "latency_p99",
+          "peak_value": 880,
+          "bounded_running_sum": 1760,
+          "frame_peak": 880,
+          "frame_mean": 586,
+          "frame_first_value": 880,
+          "lag_fill_value": 0,
+          "leader_count": 2,
+          "rank_span": 5,
+          "window_pressure": 15,
+          "idle_gap": 0,
+          "carry_in": 0,
+          "carry_out": 19,
+          "ledger_adjusted_pressure": 15,
+          "stability_index": 24,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "checkout",
+            "ledger-svc",
+            "search"
+          ],
+          "exposure_score": 30,
+          "exposure_strongest_path": [
+            "gateway",
+            "checkout"
+          ],
+          "source_sample_ids": [
+            "gw-lat-1",
+            "gw-lat-2",
+            "gw-lat-3",
+            "gw-lat-4",
+            "gw-lat-5"
+          ]
+        },
+        {
+          "start_ts": 250,
+          "end_ts": 330,
+          "span_ms": 80,
+          "sample_count": 3,
+          "canonical_sample_count": 3,
+          "metric": "error_rate",
+          "peak_value": 520,
+          "bounded_running_sum": 1300,
+          "frame_peak": 520,
+          "frame_mean": 433,
+          "frame_first_value": 300,
+          "lag_fill_value": 520,
+          "leader_count": 1,
+          "rank_span": 3,
+          "window_pressure": 9,
+          "idle_gap": 20,
+          "carry_in": 9,
+          "carry_out": 22,
+          "ledger_adjusted_pressure": 12,
+          "stability_index": 19,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "checkout",
+            "ledger-svc",
+            "search"
+          ],
+          "exposure_score": 30,
+          "exposure_strongest_path": [
+            "gateway",
+            "checkout"
+          ],
+          "source_sample_ids": [
+            "gw-err-1",
+            "gw-err-2",
+            "gw-err-3"
+          ]
+        },
+        {
+          "start_ts": 360,
+          "end_ts": 440,
+          "span_ms": 80,
+          "sample_count": 3,
+          "canonical_sample_count": 3,
+          "metric": "saturation",
+          "peak_value": 760,
+          "bounded_running_sum": 2150,
+          "frame_peak": 760,
+          "frame_mean": 716,
+          "frame_first_value": 700,
+          "lag_fill_value": 760,
+          "leader_count": 1,
+          "rank_span": 3,
+          "window_pressure": 14,
+          "idle_gap": 30,
+          "carry_in": 7,
+          "carry_out": 25,
+          "ledger_adjusted_pressure": 16,
+          "stability_index": 23,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "checkout",
+            "ledger-svc",
+            "search"
+          ],
+          "exposure_score": 30,
+          "exposure_strongest_path": [
+            "gateway",
+            "checkout"
+          ],
+          "source_sample_ids": [
+            "gw-sat-1",
+            "gw-sat-2",
+            "gw-sat-3"
+          ]
+        },
+        {
+          "start_ts": 470,
+          "end_ts": 500,
+          "span_ms": 30,
+          "sample_count": 2,
+          "canonical_sample_count": 2,
+          "metric": "queue_depth",
+          "peak_value": 46,
+          "bounded_running_sum": 86,
+          "frame_peak": 46,
+          "frame_mean": 43,
+          "frame_first_value": 40,
+          "lag_fill_value": 40,
+          "leader_count": 1,
+          "rank_span": 2,
+          "window_pressure": 0,
+          "idle_gap": 30,
+          "carry_in": 10,
+          "carry_out": 14,
+          "ledger_adjusted_pressure": 3,
+          "stability_index": 9,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "checkout",
+            "ledger-svc",
+            "search"
+          ],
+          "exposure_score": 30,
+          "exposure_strongest_path": [
+            "gateway",
+            "checkout"
+          ],
+          "source_sample_ids": [
+            "gw-qd-1",
+            "gw-qd-2"
+          ]
+        }
+      ],
+      "search": [
+        {
+          "start_ts": 120,
+          "end_ts": 200,
+          "span_ms": 80,
+          "sample_count": 3,
+          "canonical_sample_count": 3,
+          "metric": "latency_p99",
+          "peak_value": 560,
+          "bounded_running_sum": 1650,
+          "frame_peak": 560,
+          "frame_mean": 550,
+          "frame_first_value": 550,
+          "lag_fill_value": 560,
+          "leader_count": 1,
+          "rank_span": 3,
+          "window_pressure": 11,
+          "idle_gap": 0,
+          "carry_in": 0,
+          "carry_out": 13,
+          "ledger_adjusted_pressure": 11,
+          "stability_index": 16,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "ledger-svc"
+          ],
+          "exposure_score": 16,
+          "exposure_strongest_path": [
+            "search",
+            "billing"
+          ],
+          "source_sample_ids": [
+            "se-lat-1",
+            "se-lat-2",
+            "se-lat-3"
+          ]
+        }
+      ]
+    },
+    "queue_rows": [
+      {
+        "window_id": "gateway:saturation:360-440",
+        "series": "gateway",
+        "start_ts": 360,
+        "end_ts": 440,
+        "span_ms": 80,
+        "sample_count": 3,
+        "canonical_sample_count": 3,
+        "metric": "saturation",
+        "peak_value": 760,
+        "bounded_running_sum": 2150,
+        "frame_peak": 760,
+        "frame_mean": 716,
+        "frame_first_value": 700,
+        "lag_fill_value": 760,
+        "leader_count": 1,
+        "rank_span": 3,
+        "window_pressure": 14,
+        "idle_gap": 30,
+        "carry_in": 7,
+        "carry_out": 25,
+        "ledger_adjusted_pressure": 16,
+        "stability_index": 23,
+        "exposure_reachable_series": [
+          "billing",
+          "cache",
+          "checkout",
+          "ledger-svc",
+          "search"
+        ],
+        "exposure_score": 30,
+        "exposure_strongest_path": [
+          "gateway",
+          "checkout"
+        ],
+        "source_sample_ids": [
+          "gw-sat-1",
+          "gw-sat-2",
+          "gw-sat-3"
+        ],
+        "tier": "escalate"
+      },
+      {
+        "window_id": "gateway:latency_p99:100-230",
+        "series": "gateway",
+        "start_ts": 100,
+        "end_ts": 230,
+        "span_ms": 130,
+        "sample_count": 5,
+        "canonical_sample_count": 6,
+        "metric": "latency_p99",
+        "peak_value": 880,
+        "bounded_running_sum": 1760,
+        "frame_peak": 880,
+        "frame_mean": 586,
+        "frame_first_value": 880,
+        "lag_fill_value": 0,
+        "leader_count": 2,
+        "rank_span": 5,
+        "window_pressure": 15,
+        "idle_gap": 0,
+        "carry_in": 0,
+        "carry_out": 19,
+        "ledger_adjusted_pressure": 15,
+        "stability_index": 24,
+        "exposure_reachable_series": [
+          "billing",
+          "cache",
+          "checkout",
+          "ledger-svc",
+          "search"
+        ],
+        "exposure_score": 30,
+        "exposure_strongest_path": [
+          "gateway",
+          "checkout"
+        ],
+        "source_sample_ids": [
+          "gw-lat-1",
+          "gw-lat-2",
+          "gw-lat-3",
+          "gw-lat-4",
+          "gw-lat-5"
+        ],
+        "tier": "escalate"
+      },
+      {
+        "window_id": "checkout:latency_p99:100-205",
+        "series": "checkout",
+        "start_ts": 100,
+        "end_ts": 205,
+        "span_ms": 105,
+        "sample_count": 3,
+        "canonical_sample_count": 3,
+        "metric": "latency_p99",
+        "peak_value": 700,
+        "bounded_running_sum": 2040,
+        "frame_peak": 700,
+        "frame_mean": 680,
+        "frame_first_value": 650,
+        "lag_fill_value": 700,
+        "leader_count": 1,
+        "rank_span": 3,
+        "window_pressure": 14,
+        "idle_gap": 0,
+        "carry_in": 0,
+        "carry_out": 17,
+        "ledger_adjusted_pressure": 14,
+        "stability_index": 19,
+        "exposure_reachable_series": [
+          "billing",
+          "cache",
+          "ledger-svc"
+        ],
+        "exposure_score": 20,
+        "exposure_strongest_path": [
+          "checkout",
+          "cache"
+        ],
+        "source_sample_ids": [
+          "co-lat-1",
+          "co-lat-2",
+          "co-lat-3"
+        ],
+        "tier": "escalate"
+      },
+      {
+        "window_id": "billing:saturation:100-190",
+        "series": "billing",
+        "start_ts": 100,
+        "end_ts": 190,
+        "span_ms": 90,
+        "sample_count": 3,
+        "canonical_sample_count": 3,
+        "metric": "saturation",
+        "peak_value": 720,
+        "bounded_running_sum": 2030,
+        "frame_peak": 720,
+        "frame_mean": 676,
+        "frame_first_value": 610,
+        "lag_fill_value": 700,
+        "leader_count": 1,
+        "rank_span": 3,
+        "window_pressure": 14,
+        "idle_gap": 0,
+        "carry_in": 0,
+        "carry_out": 15,
+        "ledger_adjusted_pressure": 14,
+        "stability_index": 18,
+        "exposure_reachable_series": [
+          "cache",
+          "ledger-svc"
+        ],
+        "exposure_score": 9,
+        "exposure_strongest_path": [
+          "billing",
+          "ledger-svc"
+        ],
+        "source_sample_ids": [
+          "bi-sat-1",
+          "bi-sat-2",
+          "bi-sat-3"
+        ],
+        "tier": "review"
+      },
+      {
+        "window_id": "search:latency_p99:120-200",
+        "series": "search",
+        "start_ts": 120,
+        "end_ts": 200,
+        "span_ms": 80,
+        "sample_count": 3,
+        "canonical_sample_count": 3,
+        "metric": "latency_p99",
+        "peak_value": 560,
+        "bounded_running_sum": 1650,
+        "frame_peak": 560,
+        "frame_mean": 550,
+        "frame_first_value": 550,
+        "lag_fill_value": 560,
+        "leader_count": 1,
+        "rank_span": 3,
+        "window_pressure": 11,
+        "idle_gap": 0,
+        "carry_in": 0,
+        "carry_out": 13,
+        "ledger_adjusted_pressure": 11,
+        "stability_index": 16,
+        "exposure_reachable_series": [
+          "billing",
+          "cache",
+          "ledger-svc"
+        ],
+        "exposure_score": 16,
+        "exposure_strongest_path": [
+          "search",
+          "billing"
+        ],
+        "source_sample_ids": [
+          "se-lat-1",
+          "se-lat-2",
+          "se-lat-3"
+        ],
+        "tier": "review"
+      },
+      {
+        "window_id": "cache:saturation:100-180",
+        "series": "cache",
+        "start_ts": 100,
+        "end_ts": 180,
+        "span_ms": 80,
+        "sample_count": 3,
+        "canonical_sample_count": 3,
+        "metric": "saturation",
+        "peak_value": 320,
+        "bounded_running_sum": 910,
+        "frame_peak": 320,
+        "frame_mean": 303,
+        "frame_first_value": 300,
+        "lag_fill_value": 320,
+        "leader_count": 1,
+        "rank_span": 3,
+        "window_pressure": 6,
+        "idle_gap": 0,
+        "carry_in": 1,
+        "carry_out": 8,
+        "ledger_adjusted_pressure": 7,
+        "stability_index": 10,
+        "exposure_reachable_series": [
+          "ledger-svc"
+        ],
+        "exposure_score": 2,
+        "exposure_strongest_path": [
+          "cache",
+          "ledger-svc"
+        ],
+        "source_sample_ids": [
+          "ca-sat-1",
+          "ca-sat-2",
+          "ca-sat-3"
+        ],
+        "tier": "watch"
+      }
+    ]
+  },
+  "alternate": {
+    "summary": {
+      "schema_version": "obs-window-v1",
+      "raw_sample_count": 18,
+      "unique_sample_ids": 17,
+      "canonical_sample_count": 17,
+      "series_count": 3,
+      "partition_count": 7,
+      "suppressed_excluded_count": 1,
+      "tier_counts": {
+        "escalate": 2,
+        "review": 3,
+        "watch": 0
+      },
+      "total_span_ms": 345,
+      "total_bounded_running_sum": 7445,
+      "total_window_pressure": 57,
+      "total_ledger_adjusted_pressure": 57,
+      "longest_window_ms": 100,
+      "queued_window_count": 5,
+      "max_window_pressure": 16,
+      "max_ledger_adjusted_pressure": 16,
+      "max_stability_index": 24,
+      "max_exposure_score": 30,
+      "max_carry_out": 20
+    },
+    "windows": {
+      "billing": [
+        {
+          "start_ts": 100,
+          "end_ts": 185,
+          "span_ms": 85,
+          "sample_count": 3,
+          "canonical_sample_count": 3,
+          "metric": "saturation",
+          "peak_value": 700,
+          "bounded_running_sum": 1640,
+          "frame_peak": 700,
+          "frame_mean": 546,
+          "frame_first_value": 640,
+          "lag_fill_value": 300,
+          "leader_count": 1,
+          "rank_span": 3,
+          "window_pressure": 12,
+          "idle_gap": 0,
+          "carry_in": 0,
+          "carry_out": 13,
+          "ledger_adjusted_pressure": 12,
+          "stability_index": 16,
+          "exposure_reachable_series": [
+            "cache",
+            "ledger-svc"
+          ],
+          "exposure_score": 9,
+          "exposure_strongest_path": [
+            "billing",
+            "ledger-svc"
+          ],
+          "source_sample_ids": [
+            "a-bi-sat-1",
+            "a-bi-sat-2",
+            "a-bi-sat-3"
+          ]
+        },
+        {
+          "start_ts": 220,
+          "end_ts": 260,
+          "span_ms": 40,
+          "sample_count": 2,
+          "canonical_sample_count": 2,
+          "metric": "latency_p99",
+          "peak_value": 660,
+          "bounded_running_sum": 1280,
+          "frame_peak": 660,
+          "frame_mean": 640,
+          "frame_first_value": 620,
+          "lag_fill_value": 620,
+          "leader_count": 1,
+          "rank_span": 2,
+          "window_pressure": 10,
+          "idle_gap": 35,
+          "carry_in": 0,
+          "carry_out": 11,
+          "ledger_adjusted_pressure": 10,
+          "stability_index": 13,
+          "exposure_reachable_series": [
+            "cache",
+            "ledger-svc"
+          ],
+          "exposure_score": 9,
+          "exposure_strongest_path": [
+            "billing",
+            "ledger-svc"
+          ],
+          "source_sample_ids": [
+            "a-bi-lat-1",
+            "a-bi-lat-2"
+          ]
+        }
+      ],
+      "gateway": [
+        {
+          "start_ts": 100,
+          "end_ts": 200,
+          "span_ms": 100,
+          "sample_count": 4,
+          "canonical_sample_count": 4,
+          "metric": "latency_p99",
+          "peak_value": 940,
+          "bounded_running_sum": 1850,
+          "frame_peak": 940,
+          "frame_mean": 616,
+          "frame_first_value": 910,
+          "lag_fill_value": 940,
+          "leader_count": 2,
+          "rank_span": 4,
+          "window_pressure": 16,
+          "idle_gap": 0,
+          "carry_in": 0,
+          "carry_out": 20,
+          "ledger_adjusted_pressure": 16,
+          "stability_index": 24,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "checkout",
+            "ledger-svc",
+            "search"
+          ],
+          "exposure_score": 30,
+          "exposure_strongest_path": [
+            "gateway",
+            "checkout"
+          ],
+          "source_sample_ids": [
+            "a-gw-lat-1",
+            "a-gw-lat-2",
+            "a-gw-lat-3",
+            "a-gw-lat-4"
+          ]
+        },
+        {
+          "start_ts": 240,
+          "end_ts": 280,
+          "span_ms": 40,
+          "sample_count": 2,
+          "canonical_sample_count": 2,
+          "metric": "error_rate",
+          "peak_value": 455,
+          "bounded_running_sum": 865,
+          "frame_peak": 455,
+          "frame_mean": 432,
+          "frame_first_value": 410,
+          "lag_fill_value": 410,
+          "leader_count": 1,
+          "rank_span": 2,
+          "window_pressure": 6,
+          "idle_gap": 40,
+          "carry_in": 0,
+          "carry_out": 10,
+          "ledger_adjusted_pressure": 6,
+          "stability_index": 12,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "checkout",
+            "ledger-svc",
+            "search"
+          ],
+          "exposure_score": 30,
+          "exposure_strongest_path": [
+            "gateway",
+            "checkout"
+          ],
+          "source_sample_ids": [
+            "a-gw-err-1",
+            "a-gw-err-2"
+          ]
+        },
+        {
+          "start_ts": 320,
+          "end_ts": 360,
+          "span_ms": 40,
+          "sample_count": 2,
+          "canonical_sample_count": 2,
+          "metric": "saturation",
+          "peak_value": 330,
+          "bounded_running_sum": 630,
+          "frame_peak": 330,
+          "frame_mean": 315,
+          "frame_first_value": 300,
+          "lag_fill_value": 300,
+          "leader_count": 1,
+          "rank_span": 2,
+          "window_pressure": 4,
+          "idle_gap": 40,
+          "carry_in": 0,
+          "carry_out": 8,
+          "ledger_adjusted_pressure": 4,
+          "stability_index": 10,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "checkout",
+            "ledger-svc",
+            "search"
+          ],
+          "exposure_score": 30,
+          "exposure_strongest_path": [
+            "gateway",
+            "checkout"
+          ],
+          "source_sample_ids": [
+            "a-gw-sat-1",
+            "a-gw-sat-2"
+          ]
+        }
+      ],
+      "search": [
+        {
+          "start_ts": 120,
+          "end_ts": 160,
+          "span_ms": 40,
+          "sample_count": 2,
+          "canonical_sample_count": 2,
+          "metric": "latency_p99",
+          "peak_value": 560,
+          "bounded_running_sum": 1100,
+          "frame_peak": 560,
+          "frame_mean": 550,
+          "frame_first_value": 540,
+          "lag_fill_value": 540,
+          "leader_count": 1,
+          "rank_span": 2,
+          "window_pressure": 9,
+          "idle_gap": 0,
+          "carry_in": 0,
+          "carry_out": 11,
+          "ledger_adjusted_pressure": 9,
+          "stability_index": 13,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "ledger-svc"
+          ],
+          "exposure_score": 16,
+          "exposure_strongest_path": [
+            "search",
+            "billing"
+          ],
+          "source_sample_ids": [
+            "a-se-lat-1",
+            "a-se-lat-2"
+          ]
+        },
+        {
+          "start_ts": 200,
+          "end_ts": 200,
+          "span_ms": 0,
+          "sample_count": 1,
+          "canonical_sample_count": 2,
+          "metric": "queue_depth",
+          "peak_value": 80,
+          "bounded_running_sum": 80,
+          "frame_peak": 80,
+          "frame_mean": 80,
+          "frame_first_value": 80,
+          "lag_fill_value": 80,
+          "leader_count": 1,
+          "rank_span": 1,
+          "window_pressure": 0,
+          "idle_gap": 40,
+          "carry_in": 0,
+          "carry_out": 2,
+          "ledger_adjusted_pressure": 0,
+          "stability_index": 3,
+          "exposure_reachable_series": [
+            "billing",
+            "cache",
+            "ledger-svc"
+          ],
+          "exposure_score": 16,
+          "exposure_strongest_path": [
+            "search",
+            "billing"
+          ],
+          "source_sample_ids": [
+            "a-se-qd-1"
+          ]
+        }
+      ]
+    },
+    "queue_rows": [
+      {
+        "window_id": "gateway:latency_p99:100-200",
+        "series": "gateway",
+        "start_ts": 100,
+        "end_ts": 200,
+        "span_ms": 100,
+        "sample_count": 4,
+        "canonical_sample_count": 4,
+        "metric": "latency_p99",
+        "peak_value": 940,
+        "bounded_running_sum": 1850,
+        "frame_peak": 940,
+        "frame_mean": 616,
+        "frame_first_value": 910,
+        "lag_fill_value": 940,
+        "leader_count": 2,
+        "rank_span": 4,
+        "window_pressure": 16,
+        "idle_gap": 0,
+        "carry_in": 0,
+        "carry_out": 20,
+        "ledger_adjusted_pressure": 16,
+        "stability_index": 24,
+        "exposure_reachable_series": [
+          "billing",
+          "cache",
+          "checkout",
+          "ledger-svc",
+          "search"
+        ],
+        "exposure_score": 30,
+        "exposure_strongest_path": [
+          "gateway",
+          "checkout"
+        ],
+        "source_sample_ids": [
+          "a-gw-lat-1",
+          "a-gw-lat-2",
+          "a-gw-lat-3",
+          "a-gw-lat-4"
+        ],
+        "tier": "escalate"
+      },
+      {
+        "window_id": "gateway:error_rate:240-280",
+        "series": "gateway",
+        "start_ts": 240,
+        "end_ts": 280,
+        "span_ms": 40,
+        "sample_count": 2,
+        "canonical_sample_count": 2,
+        "metric": "error_rate",
+        "peak_value": 455,
+        "bounded_running_sum": 865,
+        "frame_peak": 455,
+        "frame_mean": 432,
+        "frame_first_value": 410,
+        "lag_fill_value": 410,
+        "leader_count": 1,
+        "rank_span": 2,
+        "window_pressure": 6,
+        "idle_gap": 40,
+        "carry_in": 0,
+        "carry_out": 10,
+        "ledger_adjusted_pressure": 6,
+        "stability_index": 12,
+        "exposure_reachable_series": [
+          "billing",
+          "cache",
+          "checkout",
+          "ledger-svc",
+          "search"
+        ],
+        "exposure_score": 30,
+        "exposure_strongest_path": [
+          "gateway",
+          "checkout"
+        ],
+        "source_sample_ids": [
+          "a-gw-err-1",
+          "a-gw-err-2"
+        ],
+        "tier": "escalate"
+      },
+      {
+        "window_id": "billing:saturation:100-185",
+        "series": "billing",
+        "start_ts": 100,
+        "end_ts": 185,
+        "span_ms": 85,
+        "sample_count": 3,
+        "canonical_sample_count": 3,
+        "metric": "saturation",
+        "peak_value": 700,
+        "bounded_running_sum": 1640,
+        "frame_peak": 700,
+        "frame_mean": 546,
+        "frame_first_value": 640,
+        "lag_fill_value": 300,
+        "leader_count": 1,
+        "rank_span": 3,
+        "window_pressure": 12,
+        "idle_gap": 0,
+        "carry_in": 0,
+        "carry_out": 13,
+        "ledger_adjusted_pressure": 12,
+        "stability_index": 16,
+        "exposure_reachable_series": [
+          "cache",
+          "ledger-svc"
+        ],
+        "exposure_score": 9,
+        "exposure_strongest_path": [
+          "billing",
+          "ledger-svc"
+        ],
+        "source_sample_ids": [
+          "a-bi-sat-1",
+          "a-bi-sat-2",
+          "a-bi-sat-3"
+        ],
+        "tier": "review"
+      },
+      {
+        "window_id": "billing:latency_p99:220-260",
+        "series": "billing",
+        "start_ts": 220,
+        "end_ts": 260,
+        "span_ms": 40,
+        "sample_count": 2,
+        "canonical_sample_count": 2,
+        "metric": "latency_p99",
+        "peak_value": 660,
+        "bounded_running_sum": 1280,
+        "frame_peak": 660,
+        "frame_mean": 640,
+        "frame_first_value": 620,
+        "lag_fill_value": 620,
+        "leader_count": 1,
+        "rank_span": 2,
+        "window_pressure": 10,
+        "idle_gap": 35,
+        "carry_in": 0,
+        "carry_out": 11,
+        "ledger_adjusted_pressure": 10,
+        "stability_index": 13,
+        "exposure_reachable_series": [
+          "cache",
+          "ledger-svc"
+        ],
+        "exposure_score": 9,
+        "exposure_strongest_path": [
+          "billing",
+          "ledger-svc"
+        ],
+        "source_sample_ids": [
+          "a-bi-lat-1",
+          "a-bi-lat-2"
+        ],
+        "tier": "review"
+      },
+      {
+        "window_id": "search:latency_p99:120-160",
+        "series": "search",
+        "start_ts": 120,
+        "end_ts": 160,
+        "span_ms": 40,
+        "sample_count": 2,
+        "canonical_sample_count": 2,
+        "metric": "latency_p99",
+        "peak_value": 560,
+        "bounded_running_sum": 1100,
+        "frame_peak": 560,
+        "frame_mean": 550,
+        "frame_first_value": 540,
+        "lag_fill_value": 540,
+        "leader_count": 1,
+        "rank_span": 2,
+        "window_pressure": 9,
+        "idle_gap": 0,
+        "carry_in": 0,
+        "carry_out": 11,
+        "ledger_adjusted_pressure": 9,
+        "stability_index": 13,
+        "exposure_reachable_series": [
+          "billing",
+          "cache",
+          "ledger-svc"
+        ],
+        "exposure_score": 16,
+        "exposure_strongest_path": [
+          "search",
+          "billing"
+        ],
+        "source_sample_ids": [
+          "a-se-lat-1",
+          "a-se-lat-2"
+        ],
+        "tier": "review"
+      }
+    ]
+  },
+  "broken_pipeline_sha256": "88b579ade7b12717692bbc4cb7222cc1711246d606819509b20d41d646ebee7e",
+  "broken_summary_sha256": "3841dfa3af131b5f3daa06293edd092618fcba63579f83aac66a623d2737850a",
+  "broken_queue_count": 6,
+  "broken_queue_window_ids": [
+    "gateway:latency_p99:100-230",
+    "gateway:saturation:360-440",
+    "checkout:latency_p99:100-205",
+    "billing:saturation:100-190",
+    "search:latency_p99:120-200",
+    "cache:saturation:100-180"
+  ]
+}

@@ -1,0 +1,272 @@
+[
+  {
+    "sample_id": "gw-lat-1",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 820,
+    "ts": 100,
+    "suppressed": false,
+    "note": "cold cache spike"
+  },
+  {
+    "sample_id": "gw-lat-2",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 760,
+    "ts": 140,
+    "suppressed": false,
+    "note": "recovering"
+  },
+  {
+    "sample_id": "gw-lat-3",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 640,
+    "ts": 180,
+    "suppressed": false,
+    "note": "peak pending confirmation"
+  },
+  {
+    "sample_id": "gw-lat-4",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": "n/a",
+    "ts": 180,
+    "suppressed": false,
+    "note": "probe gap null"
+  },
+  {
+    "sample_id": "gw-lat-5",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 880,
+    "ts": 230,
+    "suppressed": false,
+    "note": "second peak tie"
+  },
+  {
+    "sample_id": "gw-lat-6",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 999,
+    "ts": 160,
+    "suppressed": true,
+    "note": "synthetic probe muted"
+  },
+  {
+    "sample_id": "rollout-probe-1",
+    "series": "gateway",
+    "metric": "latency_p99",
+    "value": 1200,
+    "ts": 210,
+    "suppressed": false,
+    "note": "rollout load probe"
+  },
+  {
+    "sample_id": "gw-err-1",
+    "series": "gateway",
+    "metric": "error_rate",
+    "value": 300,
+    "ts": 250,
+    "suppressed": false,
+    "note": "5xx wave errors per minute"
+  },
+  {
+    "sample_id": "gw-err-2",
+    "series": "gateway",
+    "metric": "error_rate",
+    "value": 520,
+    "ts": 290,
+    "suppressed": false,
+    "note": "5xx wave crest"
+  },
+  {
+    "sample_id": "gw-err-3",
+    "series": "gateway",
+    "metric": "error_rate",
+    "value": 480,
+    "ts": 330,
+    "suppressed": false,
+    "note": "settling"
+  },
+  {
+    "sample_id": "gw-sat-1",
+    "series": "gateway",
+    "metric": "saturation",
+    "value": 700,
+    "ts": 360,
+    "suppressed": false,
+    "note": "pool pressure"
+  },
+  {
+    "sample_id": "gw-sat-2",
+    "series": "gateway",
+    "metric": "saturation",
+    "value": 500,
+    "ts": 400,
+    "suppressed": false,
+    "note": "pool pressure rising provisional"
+  },
+  {
+    "sample_id": "gw-sat-3",
+    "series": "gateway",
+    "metric": "saturation",
+    "value": 690,
+    "ts": 440,
+    "suppressed": false,
+    "note": "pool pressure easing"
+  },
+  {
+    "sample_id": "gw-qd-1",
+    "series": "gateway",
+    "metric": "queue_depth",
+    "value": 40,
+    "ts": 470,
+    "suppressed": false,
+    "note": "backlog"
+  },
+  {
+    "sample_id": "gw-qd-2",
+    "series": "gateway",
+    "metric": "queue_depth",
+    "value": 46,
+    "ts": 500,
+    "suppressed": false,
+    "note": "backlog grew"
+  },
+  {
+    "sample_id": "co-lat-1",
+    "series": "checkout",
+    "metric": "latency_p99",
+    "value": 650,
+    "ts": 100,
+    "suppressed": false,
+    "note": "baseline"
+  },
+  {
+    "sample_id": "co-lat-2",
+    "series": "checkout",
+    "metric": "latency_p99",
+    "value": 700,
+    "ts": 150,
+    "suppressed": false,
+    "note": "slow query"
+  },
+  {
+    "sample_id": "co-lat-2",
+    "series": "checkout",
+    "metric": "latency_p99",
+    "value": 900,
+    "ts": 150,
+    "suppressed": false,
+    "note": "watchdog re-emit inflated"
+  },
+  {
+    "sample_id": "co-lat-3",
+    "series": "checkout",
+    "metric": "latency_p99",
+    "value": 690,
+    "ts": 205,
+    "suppressed": false,
+    "note": "recovered"
+  },
+  {
+    "sample_id": "co-err-1",
+    "series": "checkout",
+    "metric": "error_rate",
+    "value": 70,
+    "ts": 230,
+    "suppressed": false,
+    "note": "declines"
+  },
+  {
+    "sample_id": "co-err-2",
+    "series": "checkout",
+    "metric": "error_rate",
+    "value": 74,
+    "ts": 270,
+    "suppressed": false,
+    "note": "declines slower"
+  },
+  {
+    "sample_id": "se-lat-1",
+    "series": "search",
+    "metric": "latency_p99",
+    "value": 550,
+    "ts": 120,
+    "suppressed": false,
+    "note": "index warmup"
+  },
+  {
+    "sample_id": "se-lat-2",
+    "series": "search",
+    "metric": "latency_p99",
+    "value": 560,
+    "ts": 160,
+    "suppressed": false,
+    "note": "index warmup"
+  },
+  {
+    "sample_id": "bi-sat-1",
+    "series": "billing",
+    "metric": "saturation",
+    "value": 610,
+    "ts": 100,
+    "suppressed": false,
+    "note": "ledger flush"
+  },
+  {
+    "sample_id": "bi-sat-2",
+    "series": "billing",
+    "metric": "saturation",
+    "value": 700,
+    "ts": 150,
+    "suppressed": false,
+    "note": "ledger flush heavy"
+  },
+  {
+    "sample_id": "bi-sat-3",
+    "series": "billing",
+    "metric": "saturation",
+    "value": 720,
+    "ts": 190,
+    "suppressed": false,
+    "note": "ledger flush peak"
+  },
+  {
+    "sample_id": "ca-err-1",
+    "series": "cache",
+    "metric": "error_rate",
+    "value": 88,
+    "ts": 100,
+    "suppressed": false,
+    "note": "evictions"
+  },
+  {
+    "sample_id": "ca-err-2",
+    "series": "cache",
+    "metric": "error_rate",
+    "value": 91,
+    "ts": 130,
+    "suppressed": false,
+    "note": "evictions rising"
+  },
+  {
+    "sample_id": "ca-err-3",
+    "series": "cache",
+    "metric": "error_rate",
+    "value": 500,
+    "ts": 150,
+    "suppressed": true,
+    "note": "synthetic canary muted"
+  },
+  {
+    "sample_id": "ca-sat-1",
+    "series": "cache",
+    "metric": "saturation",
+    "value": 300,
+    "ts": 100,
+    "suppressed": false,
+    "note": "modest pool use"
+  }
+]

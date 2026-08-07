@@ -1,0 +1,9 @@
+Act as the platform-observability engineer picking up after a failed metrics-platform rollout. The rollout truncated the authoritative telemetry sample stream at `/app/data/events.json` and left the control-plane reconciler at `/app/workflow/export_report.py` evaluating stale draft rules instead of the metrics governance board's final decisions.
+
+Nothing the reconciler produces can be trusted until that sample stream is rebuilt. A pre-rollout snapshot and a replay journal of the samples that arrived after it both survive alongside the truncated file under `/app/data`. How the two merge, which one wins where they overlap, and the order of the result are governance decisions rather than your choice, and the stream has to be restored at its expected path before the reconciler is worth running.
+
+Then restore the reconciler itself. Preserve its `--input` and `--output-dir` command-line options and their defaults, and always read the series topology and the metric policy from their fixed absolute paths under `/app/data`; `--input` selects the sample stream only.
+
+`/app/docs/report_spec.json` is the output contract: paths, schemas, required-field lists, field coercions, container shapes and sort orders. It says nothing about how any value is derived. Reconstruct that from `/app/incident/metrics_governance_log.md`, which is mostly routine noise and records rules that were drafted, revised and reversed over several months; where entries conflict, the later dated decision governs.
+
+A run writes exactly `/app/output/summary.json`, `/app/output/series_windows.json` and `/app/output/review_queue.jsonl`. Derive every value from the operational inputs: no database or dataframe engine, correct against an alternate sample stream, identical across reruns, and leave the frozen incident snapshot in `/app/workflow` untouched.
