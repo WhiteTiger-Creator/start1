@@ -2,7 +2,7 @@
 Metrics governance archive for the failed observability-platform rollout (2026-Q1 through 2026-Q2).
 
 ## Executive Summary
-How the metrics reconciler is *meant* to behave — the recovery of a truncated sample stream, canonicalization, deduplication, the window ordering and default frame, framed running aggregates, series ranking, the frame-relative value functions, the exposure metric over the series dependency topology, the per-series pressure ledger, queue admission, tiering and ordering — was settled incrementally by the metrics governance board, and those decisions live in the review entries below, not in any single summary. Several stages deliberately DEVIATE from vanilla SQL window semantics: the default frame, the rank gap rule, the ordering/NULL placement and the exposure metric are governance dialects, so importing a SQL engine and delegating to it produces wrong answers. The February draft proposals were revisited during the 2026-05 governance review and several were reversed; where a draft or interim conflicts with a later decision, the later dated decision governs. `/app/docs/report_spec.json` is the output contract only.
+How the metrics reconciler is *meant* to behave — the recovery of a truncated sample stream, canonicalization, deduplication, the window ordering and default frame, framed running aggregates, series ranking, the frame-relative value functions, the exposure metric over the series dependency topology, the per-series pressure ledger, queue admission, tiering and ordering — was settled incrementally by the metrics governance board, and those decisions live in the review entries below, not in any single summary. Several stages deliberately DEVIATE from vanilla SQL window semantics: the default frame, the rank gap rule, the ordering/NULL placement and the exposure metric are governance dialects, so importing a SQL engine and delegating to it produces wrong answers. The February draft proposals were revisited during the 2026-05 governance review and several were reversed, and the 2026-06 review revised parts of the exposure stage again; where a draft or interim conflicts with a later decision, the later dated decision governs. `/app/docs/report_spec.json` is the output contract only.
 
 ## Governance Review Archive
 Routine entries are context only. #OBS-ticketed proposal and decision quotes are the authoritative record for reconciler behaviour.
@@ -365,7 +365,7 @@ Historical CSV exports remain archived and non-authoritative for the JSON reconc
 
 ### Review entry 1083 — billing (ledger) lane
 Shift lead logged a routine observation for billing (ledger) during review window 1083. Noise review: repeated samples traced to a flapping collector, suppressed at the source.
-> **Governance decision (2026-05-08 - #OBS-6122)** Priya: exposure metric (widest-path bounded reachability, deviates from SQL and from an edge-weight sum): for a window's series (the origin) enumerate every simple directed path of 1, 2 or 3 edges (bounded reachability; a simple path never repeats a node). A path's BOTTLENECK is the MINIMUM edge weight along it (maximin / widest-path), NOT the sum of its weights. For each reachable target retain the path with the GREATEST bottleneck, ties broken by the lexicographically smallest full node sequence. exposure_score = the SUM over reachable targets of each target's retained bottleneck (final, revising the single-greatest interim #OBS-6124 and the edge-sum draft #OBS-6020). exposure_reachable_series = the retained target names sorted ascending. exposure_strongest_path = among retained paths the one with the greatest bottleneck, then lexicographically smallest full node sequence; [origin] when nothing is reachable
+> **Governance decision (2026-05-08 - #OBS-6122)** Priya: exposure metric (widest-path bounded reachability, deviates from SQL and from an edge-weight sum): for a window's series (the origin) consider the directed paths leaving it. A path's BOTTLENECK is the MINIMUM edge weight along it (maximin / widest-path), NOT the sum of its weights. For each reachable target retain its greatest bottleneck; exposure_score = the SUM over reachable targets of each target's retained bottleneck (this replaces the single-greatest interim #OBS-6124 and the edge-sum draft #OBS-6020). The hop bound, the treatment of repeated series and the reported fields were reopened at the 2026-06 review *(Revised — see #OBS-6180.)*
 No reconciler semantics changed in this entry; parameters remain as approved by the governance board.
 
 ### Review entry 1084 — cache (edge) lane
@@ -408,7 +408,7 @@ Reviewers should reconcile behaviour questions against #OBS governance decisions
 
 ### Review entry 1093 — search (west) lane
 Shift lead logged a routine observation for search (west) during review window 1093. Noise review: repeated samples traced to a flapping collector, suppressed at the source.
-> **Governance decision (2026-05-29 - #OBS-6162)** Yusuf: ledger carry-out backlog term, final: the backlog bonus is ceil(exposure_score / 9), revising the rank_span*2 term in #OBS-6115, so carry_out = min(carry_in + window_pressure + ceil(exposure_score / 9), carry_out_cap). A window on a high blast-radius series therefore carries more pressure forward. ROUNDING: exposure_score // 9 = CEIL
+> **Governance decision (2026-05-29 - #OBS-6162)** Yusuf: ledger carry-out backlog term, final: the backlog bonus is ceil(exposure_score / 9), revising the rank_span*2 term in #OBS-6115, so carry_out = min(carry_in + window_pressure + ceil(exposure_score / 9), carry_out_cap). A window on a high blast-radius series therefore carries more pressure forward. ROUNDING: exposure_score // 9 = CEIL *(Revised — the divisor is rescaled in #OBS-6182.)*
 Thread archived; see the #OBS decision entries for anything affecting reconciler behaviour.
 
 ### Review entry 1094 — ingest (north) lane
@@ -425,7 +425,7 @@ Reviewers should reconcile behaviour questions against #OBS governance decisions
 
 ### Review entry 1097 — checkout (core) lane
 Shift lead logged a routine observation for checkout (core) during review window 1097. Change-board reviewed stale exception approvals; owners pinged before the next reconcile cycle.
-> **Governance decision (2026-05-08 - #OBS-6118)** Priya: stability_index = ledger_adjusted_pressure + rank_span + (exposure_score // 7), FLOORED on the exposure term. This supersedes the frame_mean draft #OBS-6018. ROUNDING: exposure_score // 7 = FLOOR
+> **Governance decision (2026-05-08 - #OBS-6118)** Priya: stability_index = ledger_adjusted_pressure + rank_span + (exposure_score // 7), FLOORED on the exposure term. This supersedes the frame_mean draft #OBS-6018. ROUNDING: exposure_score // 7 = FLOOR *(Revised — the divisor is rescaled in #OBS-6184.)*
 Thread archived; see the #OBS decision entries for anything affecting reconciler behaviour.
 
 ### Review entry 1098 — search (core) lane
@@ -515,7 +515,7 @@ Thread archived; see the #OBS decision entries for anything affecting reconciler
 
 ### Review entry 1118 — ingest (north) lane
 Shift lead logged a routine observation for ingest (north) during review window 1118. Rule-set rollback rehearsal ran clean; no changes to reconciler parameters were approved.
-> **Governance decision (2026-05-18 - #OBS-6150)** Priya: metric policy baseline (read from /app/data/metric_policies.json at that fixed absolute path; --input never relocates it). Any field the policy file omits keeps its baseline: admission_min = 6; escalate_ledger_min = 20; escalate_exposure_min = 26; escalate_stability_min = 24; escalate_peak_min = 900; review_ledger_min = 10; review_exposure_min = 16; review_frame_peak_min = 650; carry_out_cap = 850
+> **Governance decision (2026-05-18 - #OBS-6150)** Priya: metric policy baseline (read from /app/data/metric_policies.json at that fixed absolute path; --input never relocates it). Any field the policy file omits keeps its baseline: admission_min = 5; escalate_ledger_min = 24; escalate_exposure_min = 9600; escalate_stability_min = 42; escalate_peak_min = 1100; review_ledger_min = 14; review_exposure_min = 6400; review_frame_peak_min = 620; carry_out_cap = 70
 Historical CSV exports remain archived and non-authoritative for the JSON reconciler acceptance.
 
 ### Review entry 1119 — gateway (south) lane
@@ -548,3 +548,49 @@ Reviewers should reconcile behaviour questions against #OBS governance decisions
 Shift lead logged a routine observation for search (west) during review window 1125. Capacity review noted rising sample volume; thresholds unchanged outside the governance process.
 Thread archived; see the #OBS decision entries for anything affecting reconciler behaviour.
 
+### Review entry 1126 — gateway (edge) lane
+Shift lead logged a routine observation for gateway (edge) during review window 1126. Dashboard tiles for sample volume lagged during rule refresh; attributed to cache staleness, not the reconciler.
+Reviewers should reconcile behaviour questions against #OBS governance decisions rather than chat excerpts.
+
+### Review entry 1127 — checkout (core) lane
+Shift lead logged a routine observation for checkout (core) during review window 1127. Topology edge audit sampled cross-account roles; no reconciler-relevant findings for this lane.
+> **Governance decision (2026-06-03 - #OBS-6180)** Lena: exposure metric, final — this revises #OBS-6122 and settles the hop bound, the treatment of repeated series and the reported fields. Reachability from a window's series (the origin) runs over directed WALKS of at most SIX edges; a walk may pass through the same series more than once, so the "simple path" restriction of #OBS-6122 no longer applies. A walk's bottleneck is still the MINIMUM edge weight along it and each reachable target still retains its GREATEST bottleneck over the walks that reach it within the bound; the origin is never a target of itself. exposure_score remains the SUM of those retained bottlenecks over every reachable target, and exposure_reachable_count is how many distinct targets are reachable within the bound. The full reachable-target list is no longer reported — at production topology size six edges reaches thousands of series from most origins and the array swamped the artifact — so instead exposure_widest_target names the single target holding the greatest retained bottleneck, ties broken by the smallest target name, and exposure_strongest_path is the lexicographically smallest node sequence among the walks from the origin to that target that attain that bottleneck within the six-edge bound. When nothing is reachable, exposure_score and exposure_reachable_count are 0, exposure_widest_target is the origin's own name and exposure_strongest_path is [origin]. Exposure is a property of the series, not of the metric: every window of a series shares one origin and therefore one exposure result
+Thread archived; see the #OBS decision entries for anything affecting reconciler behaviour.
+
+### Review entry 1128 — search (core) lane
+Shift lead logged a routine observation for search (core) during review window 1128. Synthetic sample injection verified alert delivery to the on-call rotation for this region.
+Historical CSV exports remain archived and non-authoritative for the JSON reconciler acceptance.
+
+### Review entry 1129 — billing (ledger) lane
+Shift lead logged a routine observation for billing (ledger) during review window 1129. Noise review: repeated samples traced to a flapping collector, suppressed at the source.
+No reconciler semantics changed in this entry; parameters remain as approved by the governance board.
+
+### Review entry 1130 — cache (edge) lane
+Shift lead logged a routine observation for cache (edge) during review window 1130. Quarterly access recertification touched this lane; no reconciler-relevant configuration changed.
+> **Governance decision (2026-06-05 - #OBS-6182)** Yusuf: ledger carry-out backlog term, rescaled. Under the six-edge bound of #OBS-6180 exposure_score is orders of magnitude larger than it was under the two-edge draft, so the backlog bonus is ceil(exposure_score / 900), revising the / 9 divisor of #OBS-6162: carry_out = min(carry_in + window_pressure + ceil(exposure_score / 900), carry_out_cap). Everything else in the #OBS-6116 ledger structure is unchanged. ROUNDING: exposure_score // 900 = CEIL
+Reviewers should reconcile behaviour questions against #OBS governance decisions rather than chat excerpts.
+
+### Review entry 1131 — search (west) lane
+Shift lead logged a routine observation for search (west) during review window 1131. Capacity review noted rising sample volume; thresholds unchanged outside the governance process.
+Thread archived; see the #OBS decision entries for anything affecting reconciler behaviour.
+
+### Review entry 1132 — ingest (north) lane
+Shift lead logged a routine observation for ingest (north) during review window 1132. Replica checksum sync drill completed; sample acknowledgment stayed within the governance SLO.
+> **Governance decision (2026-06-05 - #OBS-6184)** Priya: stability_index, rescaled for the same reason: stability_index = ledger_adjusted_pressure + rank_span + (exposure_score // 700), FLOORED on the exposure term, revising the // 7 divisor of #OBS-6118. The rank_span term and the ledger_adjusted_pressure term are unchanged. ROUNDING: exposure_score // 700 = FLOOR
+Historical CSV exports remain archived and non-authoritative for the JSON reconciler acceptance.
+
+### Review entry 1133 — gateway (south) lane
+Shift lead logged a routine observation for gateway (south) during review window 1133. Change-board reviewed stale exception approvals; owners pinged before the next reconcile cycle.
+No reconciler semantics changed in this entry; parameters remain as approved by the governance board.
+
+### Review entry 1134 — gateway (edge) lane
+Shift lead logged a routine observation for gateway (edge) during review window 1134. Rule-set rollback rehearsal ran clean; no changes to reconciler parameters were approved.
+Reviewers should reconcile behaviour questions against #OBS governance decisions rather than chat excerpts.
+
+### Review entry 1135 — checkout (core) lane
+Shift lead logged a routine observation for checkout (core) during review window 1135. Vendor ticket on collector retries closed; delivery within contractual budget.
+Thread archived; see the #OBS decision entries for anything affecting reconciler behaviour.
+
+### Review entry 1136 — search (core) lane
+Shift lead logged a routine observation for search (core) during review window 1136. Dashboard tiles for sample volume lagged during rule refresh; attributed to cache staleness, not the reconciler.
+Historical CSV exports remain archived and non-authoritative for the JSON reconciler acceptance.

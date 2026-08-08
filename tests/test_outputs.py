@@ -11,6 +11,7 @@ import shutil
 import sqlite3
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -27,6 +28,10 @@ LOG_PATH = Path("/app/incident/metrics_governance_log.md")
 EXPECTED_FIXTURE = Path("/tests/fixtures/expected_report.json")
 ALT_INPUT = Path("/tests/fixtures/alt_events.json")
 
+# The documented wall-clock ceiling on one full graded run. instruction.md,
+# /app/docs/report_spec.json and task.toml state the same number.
+RUNTIME_BUDGET_SEC = 120.0
+
 TIER_ORDER = ["escalate", "review", "watch"]
 TIER_RANK = {name: len(TIER_ORDER) - idx for idx, name in enumerate(TIER_ORDER)}
 
@@ -39,12 +44,13 @@ POLICY_FIELDS = (
     "carry_out_cap",
 )
 BASELINE = {
-    "admission_min": 6, "escalate_ledger_min": 20, "escalate_exposure_min": 26,
-    "escalate_stability_min": 24, "escalate_peak_min": 900, "review_ledger_min": 10,
-    "review_exposure_min": 16, "review_frame_peak_min": 650, "carry_out_cap": 850,
+    "admission_min": 5, "escalate_ledger_min": 24, "escalate_exposure_min": 9600,
+    "escalate_stability_min": 42, "escalate_peak_min": 1100, "review_ledger_min": 14,
+    "review_exposure_min": 6400, "review_frame_peak_min": 620, "carry_out_cap": 70,
 }
 ADMITTED_METRICS = {"latency_p99", "error_rate", "saturation"}
 SAMPLE_FIELDS = ("sample_id", "series", "metric", "value", "ts", "suppressed", "note")
+REACH_MAX_EDGES = 6
 
 WINDOW_KEYS = set(SPEC["series_windows_json"]["required_fields"])
 QUEUE_KEYS = set(SPEC["review_queue"]["required_fields"])
@@ -63,6 +69,12 @@ def _write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
+def _stream_digest(records) -> str:
+    return hashlib.sha256(
+        json.dumps(records, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
 # --- verifier execution isolation -------------------------------------------------
 # The submitted /app/workflow/export_report.py is untrusted once the separate verifier runs it.
 # We execute it under an unprivileged UID (65534 / nobody) via setpriv, so it cannot write the
@@ -75,7 +87,9 @@ _SETPRIV = ["setpriv", "--reuid=65534", "--regid=65534", "--clear-groups", "--no
 # The submitted program gets a minimal explicit environment rather than inheriting the verifier's
 # (PATH/PYTHONPATH/CI variables and any other grader context).
 _CANDIDATE_ENV = {"PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": "/candidate-work", "LANG": "C.UTF-8"}
-_CANDIDATE_TIMEOUT = 300
+# Hard ceiling well above the documented budget, so a runaway submission is killed long before it
+# can consume the verifier's own timeout.
+_CANDIDATE_TIMEOUT = 200
 
 
 def _candidate_dir() -> Path:
@@ -94,6 +108,7 @@ def _run_agent(argv, cwd: Path):
 
 
 def _run_pipeline(tmp_path: Path, script_path: Path = WORKFLOW_PATH, input_path: Path = DEFAULT_INPUT):
+    """Run the submitted reconciler once; returns its outputs and its wall-clock time."""
     work = _candidate_dir()
     out_dir = work / "output"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -101,41 +116,94 @@ def _run_pipeline(tmp_path: Path, script_path: Path = WORKFLOW_PATH, input_path:
     staged_input = work / "input.json"
     shutil.copy(str(input_path), str(staged_input))
     os.chmod(staged_input, 0o644)
+    started = time.monotonic()
     result = _run_agent(
         [sys.executable, str(script_path), "--input", str(staged_input), "--output-dir", str(out_dir)],
         cwd=work,
     )
+    elapsed = time.monotonic() - started
     assert result.returncode == 0
     summary = _load_json(out_dir / "summary.json")
     windows = _load_json(out_dir / "series_windows.json")
     queue = _load_jsonl(out_dir / "review_queue.jsonl")
-    return out_dir, summary, windows, queue
+    return out_dir, summary, windows, queue, elapsed
 
 
+def _run_stream(tmp_path: Path, records: list[dict]):
+    """Run the submitted reconciler on a stream defined inline (kept small on purpose)."""
+    input_path = _candidate_dir() / "stream.json"
+    _write_json(input_path, records)
+    os.chmod(input_path, 0o644)
+    return _run_pipeline(tmp_path, input_path=input_path)
+
+
+SMALL_STREAM = [
+    {"sample_id": f"m{i}", "series": series, "metric": metric,
+     "value": value, "ts": ts, "suppressed": False, "note": "probe"}
+    for i, (series, metric, value, ts) in enumerate([
+        ("gateway-00-000", "latency_p99", 980, 100),
+        ("gateway-00-000", "latency_p99", 870, 160),
+        ("gateway-00-000", "latency_p99", 910, 240),
+        ("gateway-00-000", "error_rate", 96, 120),
+        ("gateway-00-000", "error_rate", 88, 300),
+        ("checkout-00-001", "saturation", 760, 140),
+        ("checkout-00-001", "saturation", 690, 260),
+        ("checkout-00-001", "saturation", 810, 380),
+        ("search-00-002", "queue_depth", 300, 180),
+        ("search-00-002", "queue_depth", 260, 320),
+    ])
+]
+
+
+# The graded streams are run once each for the whole session and every test reuses those
+# outputs: the bounded widest-path search over the shipped topology is the expensive part.
 @pytest.fixture(scope="session")
 def primary_outputs(tmp_path_factory):
     return _run_pipeline(tmp_path_factory.mktemp("primary"))
+
+
+@pytest.fixture(scope="session")
+def alternate_outputs(tmp_path_factory):
+    return _run_pipeline(tmp_path_factory.mktemp("alternate"), input_path=ALT_INPUT)
 
 
 # --------------------------------------------------------------------------
 # Step 1: the truncated sample stream must be recovered in place
 # --------------------------------------------------------------------------
 def _naive_concatenation() -> list[dict]:
-    """The superseded draft merge: snapshot then journal, bookkeeping fields left on."""
+    """The superseded #OBS-6002 draft merge: snapshot then journal, bookkeeping left on."""
     stream = [dict(r) for r in _load_json(SNAPSHOT_PATH)]
     stream.extend(dict(e) for e in _load_json(JOURNAL_PATH))
     return stream
 
 
+def _interim_merge() -> list[dict]:
+    """The superseded #OBS-6009 interim: replayed samples appended at the end instead of
+    overwriting in place, and retractions limited to ids the snapshot never held."""
+    snapshot = _load_json(SNAPSHOT_PATH)
+    stream = [dict(r) for r in snapshot]
+    snapshot_ids = {r["sample_id"] for r in snapshot}
+    for entry in sorted(_load_json(JOURNAL_PATH), key=lambda e: e["journal_seq"]):
+        sample_id = entry["sample_id"]
+        if entry["journal_op"] == "retract":
+            if sample_id not in snapshot_ids:
+                stream = [r for r in stream if r["sample_id"] != sample_id]
+            continue
+        stream = [r for r in stream if r["sample_id"] != sample_id]
+        stream.append({field: entry[field] for field in SAMPLE_FIELDS})
+    return stream
+
+
 def test_recovery_sources_are_intact():
-    assert _load_json(SNAPSHOT_PATH) == FIXTURE["snapshot"]
-    assert _load_json(JOURNAL_PATH) == FIXTURE["journal"]
+    assert _stream_digest(_load_json(SNAPSHOT_PATH)) == FIXTURE["snapshot_sha256"]
+    assert _stream_digest(_load_json(JOURNAL_PATH)) == FIXTURE["journal_sha256"]
 
 
 def test_sample_stream_recovered():
     """/app/data/events.json shipped truncated; it must hold the recovered stream."""
     recovered = _load_json(DEFAULT_INPUT)
     assert isinstance(recovered, list)
+    assert len(recovered) == len(FIXTURE["recovered_stream"])
     assert recovered == FIXTURE["recovered_stream"]
 
 
@@ -144,24 +212,26 @@ def test_recovered_records_carry_no_journal_bookkeeping():
         assert set(record) == set(SAMPLE_FIELDS)
 
 
-def test_shipped_and_naive_streams_differ_from_the_recovered_one():
-    """The recovery is real work: neither the truncated file nor the draft merge match."""
+def test_shipped_and_superseded_streams_differ_from_the_recovered_one():
+    """The recovery is real work: neither the truncated file nor either superseded
+    merge reproduces the stream the board's final decision defines."""
     expected = FIXTURE["recovered_stream"]
-    assert FIXTURE["shipped_truncated_stream"] != expected
+    assert FIXTURE["shipped_truncated_sha256"] != _stream_digest(expected)
     assert _load_json(SNAPSHOT_PATH) != expected
     assert _naive_concatenation() != expected
+    assert _interim_merge() != expected
 
 
 def test_reconciler_output_depends_on_the_recovered_stream(tmp_path: Path):
     """Even a correctly repaired reconciler emits wrong artifacts on a wrongly merged stream."""
     for label, stream in (
-        ("truncated", FIXTURE["shipped_truncated_stream"]),
         ("snapshot_only", _load_json(SNAPSHOT_PATH)),
         ("naive_concatenation", _naive_concatenation()),
+        ("interim_merge", _interim_merge()),
     ):
         bad_input = tmp_path / f"{label}.json"
         _write_json(bad_input, stream)
-        _, summary, windows, queue = _run_pipeline(tmp_path / label, input_path=bad_input)
+        _, summary, windows, queue, _ = _run_pipeline(tmp_path / label, input_path=bad_input)
         assert summary != FIXTURE["primary"]["summary"], label
         assert (windows, queue) != (FIXTURE["primary"]["windows"], FIXTURE["primary"]["queue_rows"]), label
 
@@ -174,57 +244,82 @@ def test_cli_exists():
 
 
 def test_output_dir_contains_exactly_three_files(primary_outputs):
-    out_dir, _, _, _ = primary_outputs
+    out_dir = primary_outputs[0]
     names = sorted(p.name for p in out_dir.iterdir() if p.is_file())
     assert names == ["review_queue.jsonl", "series_windows.json", "summary.json"]
 
 
 def test_primary_summary_matches_fixture(primary_outputs):
-    _, summary, _, _ = primary_outputs
-    assert summary == FIXTURE["primary"]["summary"]
+    assert primary_outputs[1] == FIXTURE["primary"]["summary"]
 
 
 def test_primary_windows_matches_fixture(primary_outputs):
-    _, _, windows, _ = primary_outputs
-    assert windows == FIXTURE["primary"]["windows"]
+    assert primary_outputs[2] == FIXTURE["primary"]["windows"]
 
 
 def test_primary_queue_matches_fixture(primary_outputs):
-    _, _, _, queue = primary_outputs
-    assert queue == FIXTURE["primary"]["queue_rows"]
+    assert primary_outputs[3] == FIXTURE["primary"]["queue_rows"]
 
 
 def test_summary_schema(primary_outputs):
-    _, summary, _, _ = primary_outputs
+    summary = primary_outputs[1]
     assert set(summary) == SUMMARY_KEYS
     assert summary["schema_version"] == "obs-window-v1"
     assert list(summary["tier_counts"]) == TIER_ORDER
 
 
 def test_windows_schema_and_sorting(primary_outputs):
-    _, _, windows, _ = primary_outputs
+    windows = primary_outputs[2]
     assert list(windows) == sorted(windows)
-    for series_windows in windows.values():
+    for series, series_windows in windows.items():
         starts = [row["start_ts"] for row in series_windows]
         assert starts == sorted(starts)
         for row in series_windows:
             assert set(row) == WINDOW_KEYS
             assert row["span_ms"] == max(row["end_ts"] - row["start_ts"], 0)
             assert row["source_sample_ids"] == sorted(row["source_sample_ids"])
-            assert row["exposure_reachable_series"] == sorted(row["exposure_reachable_series"])
             assert row["metric"] in {"latency_p99", "error_rate", "saturation", "queue_depth"}
+            assert isinstance(row["exposure_reachable_count"], int)
+            assert row["exposure_reachable_count"] >= 0
+            assert isinstance(row["exposure_widest_target"], str)
+            path = row["exposure_strongest_path"]
+            assert path and path[0] == series
+            assert len(path) <= REACH_MAX_EDGES + 1
+            if row["exposure_reachable_count"] == 0:
+                assert row["exposure_score"] == 0
+                assert row["exposure_widest_target"] == series
+                assert path == [series]
+            else:
+                assert path[-1] == row["exposure_widest_target"]
+                assert row["exposure_widest_target"] != series
+
+
+def test_exposure_is_one_result_per_series(primary_outputs):
+    """Exposure is a property of the origin series, so every window of a series carries
+    the same exposure result whatever its metric."""
+    windows = primary_outputs[2]
+    shared = 0
+    for series_windows in windows.values():
+        if len(series_windows) < 2:
+            continue
+        shared += 1
+        first = series_windows[0]
+        for row in series_windows[1:]:
+            for field in ("exposure_score", "exposure_reachable_count",
+                          "exposure_widest_target", "exposure_strongest_path"):
+                assert row[field] == first[field]
+    assert shared > 100
 
 
 def test_queue_required_fields(primary_outputs):
-    _, _, _, queue = primary_outputs
-    for row in queue:
+    for row in primary_outputs[3]:
         assert set(row) == QUEUE_KEYS
         assert row["tier"] in TIER_RANK
         assert row["window_id"] == f"{row['series']}:{row['metric']}:{row['start_ts']}-{row['end_ts']}"
 
 
 def test_queue_sorted(primary_outputs):
-    _, _, _, queue = primary_outputs
+    queue = primary_outputs[3]
     assert queue == sorted(
         queue,
         key=lambda row: (
@@ -243,7 +338,7 @@ def test_queue_sorted(primary_outputs):
 
 
 def test_response_queue_jsonl_compact(primary_outputs):
-    out_dir, _, _, _ = primary_outputs
+    out_dir = primary_outputs[0]
     for line in (out_dir / "review_queue.jsonl").read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
@@ -252,7 +347,7 @@ def test_response_queue_jsonl_compact(primary_outputs):
 
 
 def test_summary_math_consistency(primary_outputs):
-    _, summary, windows, queue = primary_outputs
+    _, summary, windows, queue, _ = primary_outputs
     span = brs = wp = lap = longest = 0
     for series_windows in windows.values():
         for row in series_windows:
@@ -275,19 +370,54 @@ def test_summary_math_consistency(primary_outputs):
 
 
 def test_summary_sample_counts_track_the_recovered_stream(primary_outputs):
-    _, summary, _, _ = primary_outputs
+    summary = primary_outputs[1]
     stream = _load_json(DEFAULT_INPUT)
     assert summary["raw_sample_count"] == len(stream)
     assert summary["unique_sample_ids"] == len({r["sample_id"] for r in stream})
 
 
 def test_tier_counts_enumerate_all_three(primary_outputs):
-    _, summary, _, queue = primary_outputs
+    _, summary, _, queue, _ = primary_outputs
     counts = {t: 0 for t in TIER_ORDER}
     for row in queue:
         counts[row["tier"]] += 1
     assert summary["tier_counts"] == counts
     assert set(summary["tier_counts"]) == set(TIER_ORDER)
+
+
+# --------------------------------------------------------------------------
+# Runtime budget: the documented wall-clock ceiling on one full graded run.
+# --------------------------------------------------------------------------
+def test_graded_runs_meet_documented_runtime_budget(primary_outputs, alternate_outputs):
+    """Each full run on a graded stream must finish inside the budget instruction.md and
+    the output contract state. Relaxing the bounded widest-path search hop by hop leaves
+    ample headroom; walking the bounded paths out per window does not finish at all."""
+    primary_elapsed = primary_outputs[4]
+    alternate_elapsed = alternate_outputs[4]
+    print(f"reconciler run: shipped stream {primary_elapsed:.1f}s, "
+          f"alternate stream {alternate_elapsed:.1f}s, budget {RUNTIME_BUDGET_SEC:.0f}s")
+    assert primary_elapsed < RUNTIME_BUDGET_SEC, (
+        f"the shipped stream took {primary_elapsed:.1f}s, over the {RUNTIME_BUDGET_SEC:.0f}s budget"
+    )
+    assert alternate_elapsed < RUNTIME_BUDGET_SEC, (
+        f"the alternate stream took {alternate_elapsed:.1f}s, over the {RUNTIME_BUDGET_SEC:.0f}s budget"
+    )
+
+
+def test_runtime_budget_is_stated_in_the_contract():
+    """The budget the verifier enforces is the one the environment documents."""
+    assert SPEC["runtime_budget_seconds"] == int(RUNTIME_BUDGET_SEC)
+
+
+def test_graded_streams_are_at_production_scale(primary_outputs):
+    """The budget only means anything if the shipped inputs are the scaled ones."""
+    _, summary, windows, _, _ = primary_outputs
+    edges = _load_json(TOPOLOGY_PATH)
+    assert len(edges) > 20000
+    assert len({e["source_series"] for e in edges} | {e["target_series"] for e in edges}) > 1500
+    assert summary["raw_sample_count"] > 20000
+    assert summary["partition_count"] > 3000
+    assert max(r["exposure_reachable_count"] for e in windows.values() for r in e) > 1000
 
 
 # --------------------------------------------------------------------------
@@ -299,41 +429,48 @@ def test_original_snapshot_preserved():
     assert digest == FIXTURE["broken_pipeline_sha256"]
 
 
-def test_broken_snapshot_is_wrong(tmp_path: Path):
-    _, broken_summary, _, broken_queue = _run_pipeline(tmp_path, script_path=ORIGINAL_WORKFLOW_PATH)
-    broken_hash = hashlib.sha256(json.dumps(broken_summary, sort_keys=True).encode("utf-8")).hexdigest()
-    assert broken_hash == FIXTURE["broken_summary_sha256"]
-    assert len(broken_queue) == FIXTURE["broken_queue_count"]
-    assert [r.get("window_id") for r in broken_queue] == FIXTURE["broken_queue_window_ids"]
+def test_broken_snapshot_is_wrong(tmp_path: Path, primary_outputs):
+    _, broken_summary, _, broken_queue, _ = _run_pipeline(tmp_path, script_path=ORIGINAL_WORKFLOW_PATH)
+    assert broken_summary != FIXTURE["primary"]["summary"]
     assert broken_queue != FIXTURE["primary"]["queue_rows"]
+    assert broken_summary["tier_counts"] != FIXTURE["primary"]["summary"]["tier_counts"]
+    assert broken_summary["max_exposure_score"] != FIXTURE["primary"]["summary"]["max_exposure_score"]
 
 
 # --------------------------------------------------------------------------
 # Generalization / idempotency / CLI
 # --------------------------------------------------------------------------
-def test_pipeline_rerun_idempotent(tmp_path: Path):
-    _, sa, wa, qa = _run_pipeline(tmp_path / "a")
-    _, sb, wb, qb = _run_pipeline(tmp_path / "b")
-    assert (sa, wa, qa) == (sb, wb, qb)
-
-
-def test_pipeline_supports_alternate_input(tmp_path: Path):
-    _, summary, windows, queue = _run_pipeline(tmp_path, input_path=ALT_INPUT)
+def test_pipeline_supports_alternate_input(alternate_outputs):
+    _, summary, windows, queue, _ = alternate_outputs
     assert summary == FIXTURE["alternate"]["summary"]
     assert windows == FIXTURE["alternate"]["windows"]
     assert queue == FIXTURE["alternate"]["queue_rows"]
 
 
-def test_cli_defaults_work_and_match_explicit_run(tmp_path: Path):
-    _, explicit_summary, _, _ = _run_pipeline(tmp_path)
-    # The no-argument run writes to the default /app/output; clear any root-owned artifacts from
-    # solve.sh and make the dir candidate-writable so the unprivileged program can populate it.
+def test_pipeline_rerun_idempotent(tmp_path: Path):
+    _, sa, wa, qa, _ = _run_stream(tmp_path / "a", SMALL_STREAM)
+    _, sb, wb, qb, _ = _run_stream(tmp_path / "b", SMALL_STREAM)
+    assert (sa, wa, qa) == (sb, wb, qb)
+
+
+def test_cli_defaults_work_and_match_explicit_run(tmp_path: Path, primary_outputs):
+    """The no-argument run reads /app/data/events.json and writes /app/output. A small
+    stream is staged at the default path so the probe stays cheap; the graded stream is
+    restored afterwards."""
+    original = DEFAULT_INPUT.read_bytes()
     default_out = Path("/app/output")
-    shutil.rmtree(default_out, ignore_errors=True)
-    default_out.mkdir(parents=True, exist_ok=True)
-    os.chmod(default_out, 0o777)
-    _run_agent([sys.executable, str(WORKFLOW_PATH)], cwd=_candidate_dir())
-    assert _load_json(default_out / "summary.json") == explicit_summary
+    try:
+        _write_json(DEFAULT_INPUT, SMALL_STREAM)
+        _, explicit_summary, _, _, _ = _run_stream(tmp_path, SMALL_STREAM)
+        # Clear any root-owned artifacts from solve.sh and make the dir candidate-writable
+        # so the unprivileged program can populate it.
+        shutil.rmtree(default_out, ignore_errors=True)
+        default_out.mkdir(parents=True, exist_ok=True)
+        os.chmod(default_out, 0o777)
+        _run_agent([sys.executable, str(WORKFLOW_PATH)], cwd=_candidate_dir())
+        assert _load_json(default_out / "summary.json") == explicit_summary
+    finally:
+        DEFAULT_INPUT.write_bytes(original)
 
 
 def test_submitted_program_runs_unprivileged_and_cannot_write_reward(tmp_path: Path):
@@ -365,14 +502,14 @@ def test_submitted_program_runs_unprivileged_and_cannot_write_reward(tmp_path: P
 
 
 # --------------------------------------------------------------------------
-# Source-path influence
+# Source-path influence (probed on a small stream to keep the suite cheap)
 # --------------------------------------------------------------------------
 def test_topology_source_path_affects_output(tmp_path: Path):
     original = TOPOLOGY_PATH.read_text(encoding="utf-8")
     try:
-        _, summary_a, windows_a, queue_a = _run_pipeline(tmp_path / "a")
+        _, summary_a, windows_a, queue_a, _ = _run_stream(tmp_path / "a", SMALL_STREAM)
         TOPOLOGY_PATH.write_text("[]\n", encoding="utf-8")
-        _, summary_b, windows_b, queue_b = _run_pipeline(tmp_path / "b")
+        _, summary_b, windows_b, queue_b, _ = _run_stream(tmp_path / "b", SMALL_STREAM)
         assert summary_a["max_exposure_score"] > 0
         assert summary_b["max_exposure_score"] == 0
         assert summary_a != summary_b
@@ -385,12 +522,15 @@ def test_topology_source_path_affects_output(tmp_path: Path):
 def test_policy_source_path_affects_output(tmp_path: Path):
     original = POLICY_PATH.read_text()
     try:
+        _, _, _, queue_a, _ = _run_stream(tmp_path / "a", SMALL_STREAM)
+        assert queue_a
         data = json.loads(original)
         data["default"]["admission_min"] = 999
         POLICY_PATH.write_text(json.dumps(data, indent=2) + "\n")
-        _, summary, _, queue = _run_pipeline(tmp_path / "shifted")
-        assert summary != FIXTURE["primary"]["summary"]
-        assert len(queue) < len(FIXTURE["primary"]["queue_rows"])
+        _, _, _, queue_b, _ = _run_stream(tmp_path / "b", SMALL_STREAM)
+        assert len(queue_b) < len(queue_a)
+        # only the metric whose own override supplies an admission_min survives the shift
+        assert {r["metric"] for r in queue_b} == {"saturation"}
     finally:
         POLICY_PATH.write_text(original)
 
@@ -432,7 +572,7 @@ def test_policy_default_may_omit_fields_and_falls_back_to_baseline():
 
 
 def test_priority_rules_follow_resolved_policy(primary_outputs):
-    _, _, _, queue = primary_outputs
+    queue = primary_outputs[3]
     data = json.loads(POLICY_PATH.read_text())
     for row in queue:
         p = _resolve(row["metric"], data)
@@ -454,16 +594,24 @@ def test_priority_rules_follow_resolved_policy(primary_outputs):
             assert row["tier"] == "watch"
 
 
+def test_carry_out_cap_is_respected(primary_outputs):
+    _, _, windows, _, _ = primary_outputs
+    cap = _resolve("__absent__", json.loads(POLICY_PATH.read_text()))["carry_out_cap"]
+    values = [r["carry_out"] for e in windows.values() for r in e]
+    assert max(values) <= cap
+    assert values.count(cap) > 0, "the shipped stream must exercise the carry-out cap"
+
+
 # --------------------------------------------------------------------------
 # Capacity cap
 # --------------------------------------------------------------------------
 def test_series_capacity_cap_applied_after_ordering(primary_outputs):
-    _, _, windows, queue = primary_outputs
+    _, _, windows, queue, _ = primary_outputs
     per_series: dict[str, int] = {}
     for row in queue:
         per_series[row["series"]] = per_series.get(row["series"], 0) + 1
     assert per_series
-    assert max(per_series.values()) <= 2, f"series exceeded cap: {per_series}"
+    assert max(per_series.values()) <= 2, "a series exceeded the capacity cap"
     admissible = sum(
         1
         for blocks in windows.values()
@@ -478,7 +626,7 @@ def test_series_capacity_cap_applied_after_ordering(primary_outputs):
 
 
 # --------------------------------------------------------------------------
-# Exposure widest-path deviation
+# Exposure widest-path deviation and the six-edge bound
 # --------------------------------------------------------------------------
 def test_exposure_is_widest_path_bounded_reachability(tmp_path: Path):
     original = TOPOLOGY_PATH.read_text(encoding="utf-8")
@@ -490,27 +638,62 @@ def test_exposure_is_widest_path_bounded_reachability(tmp_path: Path):
             {"source_series": "t", "target_series": "deep", "weight": 5},
             {"source_series": "deep", "target_series": "far", "weight": 9},
             {"source_series": "far", "target_series": "toofar", "weight": 9},
+            {"source_series": "toofar", "target_series": "beyond", "weight": 2},
+            {"source_series": "beyond", "target_series": "brink", "weight": 9},
+            {"source_series": "brink", "target_series": "outofrange", "weight": 9},
         ]
         _write_json(TOPOLOGY_PATH, edges)
         rows = [{
             "sample_id": "x1", "series": "lab", "metric": "latency_p99",
             "value": 800, "ts": 100, "suppressed": False, "note": "trace",
         }]
-        input_path = tmp_path / "trust.json"
-        _write_json(input_path, rows)
-        _, _, windows, _ = _run_pipeline(tmp_path / "run", input_path=input_path)
+        _, _, windows, _, _ = _run_stream(tmp_path / "run", rows)
         w = windows["lab"][0]
-        # widest (maximin) bottleneck per reachable target within 3 edges:
-        #   a:    lab>a = 6
-        #   t:    max(lab>t = 3, lab>a>t = min(6,4)=4) = 4
-        #   deep: max(lab>t>deep = min(3,5)=3, lab>a>t>deep = min(6,4,5)=4) = 4
-        #   far:  lab>t>deep>far = min(3,5,9)=3  (4 edges lab>a>t>deep>far is out)
-        assert w["exposure_reachable_series"] == ["a", "deep", "far", "t"]
-        assert w["exposure_score"] == 6 + 4 + 3 + 4  # widest bottleneck sum = 17
+        # widest (maximin) bottleneck per reachable target within six edges:
+        #   a:      lab>a = 6
+        #   t:      max(lab>t = 3, lab>a>t = min(6,4) = 4) = 4
+        #   deep:   lab>a>t>deep = min(6,4,5) = 4
+        #   far:    lab>a>t>deep>far = min(4,9) = 4
+        #   toofar: five edges, min(4,9) = 4
+        #   beyond: lab>t>deep>far>toofar>beyond = min(3,5,9,9,2) = 2
+        #   brink:  lab>t>deep>far>toofar>beyond>brink = six edges, min(2,9) = 2
+        #   outofrange: seven edges by every route -- outside the bound, not reachable
+        assert w["exposure_reachable_count"] == 7
+        assert w["exposure_score"] == 6 + 4 + 4 + 4 + 4 + 2 + 2  # widest bottleneck sum = 26
+        assert w["exposure_widest_target"] == "a"
         assert w["exposure_strongest_path"] == ["lab", "a"]
-        # a standard edge-weight SUM packing would score 6 + 10 + 15 + 17 = 48;
-        # the governance widest-path (maximin) sum of 17 deviates.
-        assert w["exposure_score"] != 48
+        # a standard edge-weight SUM packing would score 6 + 10 + 15 + 24 + 33 + 35 + 37 = 160;
+        # the governance widest-path (maximin) sum of 26 deviates.
+        assert w["exposure_score"] != 160
+    finally:
+        TOPOLOGY_PATH.write_text(original, encoding="utf-8")
+
+
+def test_exposure_strongest_path_is_the_smallest_widest_walk(tmp_path: Path):
+    original = TOPOLOGY_PATH.read_text(encoding="utf-8")
+    try:
+        # 'aa', 'yy' and 'zz' all retain bottleneck 9, so the widest target is the
+        # smallest-named of them, 'aa'. Two walks reach 'aa' at bottleneck 9 and there is
+        # no direct edge, so the tie-break has to pick the lexicographically smaller node
+        # sequence -- through 'yy', not through 'zz'.
+        edges = [
+            {"source_series": "lab", "target_series": "yy", "weight": 9},
+            {"source_series": "yy", "target_series": "aa", "weight": 9},
+            {"source_series": "lab", "target_series": "zz", "weight": 9},
+            {"source_series": "zz", "target_series": "aa", "weight": 9},
+            {"source_series": "lab", "target_series": "cc", "weight": 2},
+        ]
+        _write_json(TOPOLOGY_PATH, edges)
+        rows = [{
+            "sample_id": "x1", "series": "lab", "metric": "latency_p99",
+            "value": 800, "ts": 100, "suppressed": False, "note": "trace",
+        }]
+        _, _, windows, _, _ = _run_stream(tmp_path / "run", rows)
+        w = windows["lab"][0]
+        assert w["exposure_reachable_count"] == 4
+        assert w["exposure_score"] == 9 + 9 + 9 + 2
+        assert w["exposure_widest_target"] == "aa"
+        assert w["exposure_strongest_path"] == ["lab", "yy", "aa"]
     finally:
         TOPOLOGY_PATH.write_text(original, encoding="utf-8")
 
@@ -554,9 +737,7 @@ def test_standard_sql_semantics_produce_wrong_answers(tmp_path: Path):
          "value": v, "ts": t, "suppressed": False, "note": "n"}
         for i, (v, t) in enumerate([(90, 100), (90, 140), (90, 180), (80, 220), (70, 260)])
     ]
-    input_path = tmp_path / "dev.json"
-    _write_json(input_path, rows)
-    _, _, windows, _ = _run_pipeline(tmp_path / "run", input_path=input_path)
+    _, _, windows, _, _ = _run_stream(tmp_path / "run", rows)
     w = windows["lab"][0]
     values = [90, 90, 90, 80, 70]  # partition values, ts-ascending
 

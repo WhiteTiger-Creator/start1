@@ -31,26 +31,26 @@ TIER_ORDER = ["escalate", "review", "watch"]
 # --- Governance constants (final decisions; see log entries in comments) ---
 FRAME_LOOKBACK = 2          # #OBS-6104: default frame ROWS 2 PRECEDING..CURRENT
 RANK_GAP_CAP = 2            # #OBS-6106: tie advances next rank by min(group,2)
-REACH_MAX_EDGES = 3         # #OBS-6120: bounded reachability, <=3 edges
+REACH_MAX_EDGES = 6         # #OBS-6180: bounded reachability, walks <=6 edges
 PRESS_RUNSUM_DIV = 220      # #OBS-6112: bounded_running_sum // 220 (floor)
 PRESS_PEAK_DIV = 130        # #OBS-6112: frame_peak // 130 (floor)
 LEDGER_IDLE_DIV = 2         # #OBS-6116/#OBS-6160: idle decay, CEIL (final)
 LEDGER_CARRYIN_DIV = 4      # #OBS-6116/#OBS-6160: carry-in credit, CEIL (final)
-LEDGER_EXPOSURE_DIV = 9     # #OBS-6162: carry-out exposure term, CEIL (final)
-STAB_EXPOSURE_DIV = 7       # #OBS-6118: exposure_score // 7 (floor)
+LEDGER_EXPOSURE_DIV = 900   # #OBS-6182: carry-out exposure term, CEIL (final)
+STAB_EXPOSURE_DIV = 700     # #OBS-6184: exposure_score // 700 (floor)
 
 # Baseline metric policy (#OBS-6150). Any field the policy file omits keeps
 # these values; the policy file may override per default and per metric.
 POLICY_BASELINE = {
-    "admission_min": 6,
-    "escalate_ledger_min": 20,
-    "escalate_exposure_min": 26,
-    "escalate_stability_min": 24,
-    "escalate_peak_min": 900,
-    "review_ledger_min": 10,
-    "review_exposure_min": 16,
-    "review_frame_peak_min": 650,
-    "carry_out_cap": 850,
+    "admission_min": 5,
+    "escalate_ledger_min": 24,
+    "escalate_exposure_min": 9600,
+    "escalate_stability_min": 42,
+    "escalate_peak_min": 1100,
+    "review_ledger_min": 14,
+    "review_exposure_min": 6400,
+    "review_frame_peak_min": 620,
+    "carry_out_cap": 70,
 }
 ADMITTED_METRICS = ("latency_p99", "error_rate", "saturation")  # #OBS-6140
 SERIES_CAP = 2  # #OBS-6146: at most 2 queue rows per series, after ordering
@@ -210,11 +210,11 @@ def build_window(series: str, metric: str, canon_partition: list[dict]) -> dict:
 
 
 # --------------------------------------------------------------------------
-# Stage 8: exposure over the series dependency graph (#OBS-6120..#OBS-6124)
-# Governance widest-path (maximin bottleneck) bounded reachability. NOT a
-# standard shortest/longest path or edge-weight sum.
+# Stage 8: exposure over the series dependency graph (#OBS-6120, #OBS-6180)
+# Governance widest-path (maximin bottleneck) bounded reachability over walks
+# of at most six edges. NOT a shortest/longest path and NOT an edge-weight sum.
 # --------------------------------------------------------------------------
-def build_topology(edges: list[dict]) -> dict[str, dict[str, int]]:
+def build_topology(edges: list[dict]) -> dict[str, list[tuple[str, int]]]:
     graph: dict[str, dict[str, int]] = {}
     for edge in edges:
         src = canon_name(edge.get("source_env", edge.get("source_series", "")))
@@ -222,47 +222,108 @@ def build_topology(edges: list[dict]) -> dict[str, dict[str, int]]:
         weight = coerce_int(edge.get("weight", 0))
         if src == dst or not 0 < weight <= 9:   # #OBS-6120 canonicalization
             continue
-        graph.setdefault(src, {})
-        graph[src][dst] = max(graph[src].get(dst, 0), weight)
-    return graph
+        bucket = graph.setdefault(src, {})
+        if weight > bucket.get(dst, 0):
+            bucket[dst] = weight
+    # Adjacency is materialised once, target-ascending, so the #OBS-6180 walk
+    # reconstruction can take the first admissible neighbour it meets.
+    return {src: sorted(targets.items()) for src, targets in graph.items()}
 
 
-def exposure(origin: str, graph: dict[str, dict[str, int]]) -> tuple[list[str], int, list[str]]:
-    # Enumerate simple directed paths of 1..REACH_MAX_EDGES edges. For each
-    # reachable target retain the path with the greatest BOTTLENECK (min edge
-    # weight along the path) -- the widest path; ties broken by lexicographically
-    # smallest node sequence. exposure_score = sum of retained bottlenecks.
-    best: dict[str, tuple[int, list[str]]] = {}
+_UNBOUNDED = 1 << 30
 
-    def visit(node: str, bottleneck: int, path: list[str]) -> None:
-        if len(path) - 1 >= REACH_MAX_EDGES:
-            return
-        for nxt, weight in graph.get(node, {}).items():
-            if nxt in path:
-                continue
-            new_bottleneck = weight if bottleneck == 0 else min(bottleneck, weight)
-            new_path = path + [nxt]
-            cur = best.get(nxt)
-            cand = (new_bottleneck, new_path)
-            if cur is None or new_bottleneck > cur[0] or (
-                new_bottleneck == cur[0] and new_path < cur[1]
-            ):
-                best[nxt] = cand
-            visit(nxt, new_bottleneck, new_path)
 
-    visit(origin, 0, [origin])
-    reachable = sorted(best)
-    score = sum(best[t][0] for t in reachable)
-    if reachable:
-        # strongest path: greatest bottleneck, then lexicographically smallest
-        # full node sequence.
-        strongest_path = min(
-            (best[t] for t in reachable),
-            key=lambda bp: (-bp[0], bp[1]),
-        )[1]
-    else:
-        strongest_path = [origin]
-    return reachable, score, strongest_path
+def _widest_bottlenecks(origin: str, graph: dict[str, list[tuple[str, int]]]) -> dict[str, int]:
+    """Greatest bottleneck reachable from origin over walks of <= REACH_MAX_EDGES.
+
+    A maximin relaxation, one hop layer at a time: a node is only re-expanded
+    when a later layer reaches it with a strictly wider bottleneck, because a
+    walk arriving no wider and no earlier can never lead anywhere better.
+    Enumerating the walks themselves is exponential in the hop bound and is
+    exactly what this replaces.
+    """
+    best: dict[str, int] = {}
+    frontier: dict[str, int] = {origin: _UNBOUNDED}
+    for _ in range(REACH_MAX_EDGES):
+        layer: dict[str, int] = {}
+        for node, carried in frontier.items():
+            for target, weight in graph.get(node, ()):
+                widened = min(weight, carried)
+                if widened > layer.get(target, 0):
+                    layer[target] = widened
+        frontier = {}
+        for target, widened in layer.items():
+            if target == origin:
+                continue        # the origin is never exposure to itself
+            if widened > best.get(target, 0):
+                best[target] = widened
+                frontier[target] = widened
+        if not frontier:
+            break
+    return best
+
+
+def _strongest_walk(
+    origin: str,
+    target: str,
+    bottleneck: int,
+    graph: dict[str, list[tuple[str, int]]],
+    scope: list[str],
+) -> list[str]:
+    """Lexicographically smallest walk origin -> target attaining `bottleneck`.
+
+    A backward maximin pass over the hop budget gives, for every node and every
+    remaining number of edges, the widest walk from it to the target; the walk
+    is then read forward, always taking the smallest-named neighbour that can
+    still complete within the remaining budget without narrowing below the
+    bottleneck.
+    """
+    reach_back: list[dict[str, int]] = [{target: _UNBOUNDED}]
+    for _ in range(REACH_MAX_EDGES):
+        previous = reach_back[-1]
+        current = dict(previous)
+        for node in scope:
+            widest = current.get(node, 0)
+            for nxt, weight in graph.get(node, ()):
+                onward = previous.get(nxt, 0)
+                if onward:
+                    widened = min(onward, weight)
+                    widest = max(widest, widened)
+            if widest:
+                current[node] = widest
+        reach_back.append(current)
+
+    walk = [origin]
+    node = origin
+    carried = _UNBOUNDED
+    remaining = REACH_MAX_EDGES
+    while node != target and remaining > 0:
+        step = None
+        for nxt, weight in graph.get(node, ()):
+            widened = min(weight, carried)
+            if widened >= bottleneck and reach_back[remaining - 1].get(nxt, 0) >= bottleneck:
+                step = (nxt, widened)
+                break
+        if step is None:
+            break
+        node, carried = step
+        walk.append(node)
+        remaining -= 1
+    return walk
+
+
+def exposure(origin: str, graph: dict[str, list[tuple[str, int]]]) -> tuple[int, int, str, list[str]]:
+    """(exposure_score, reachable count, widest target, strongest walk)."""
+    best = _widest_bottlenecks(origin, graph)
+    if not best:
+        return 0, 0, origin, [origin]
+    score = sum(best.values())
+    widest = max(best.values())
+    target = min(name for name, bottleneck in best.items() if bottleneck == widest)
+    scope = sorted(best)
+    scope.append(origin)
+    walk = _strongest_walk(origin, target, widest, graph, scope)
+    return score, len(best), target, walk
 
 
 # --------------------------------------------------------------------------
@@ -358,7 +419,8 @@ WINDOW_FIELDS = (
     "carry_out",
     "ledger_adjusted_pressure",
     "stability_index",
-    "exposure_reachable_series",
+    "exposure_reachable_count",
+    "exposure_widest_target",
     "exposure_score",
     "exposure_strongest_path",
     "source_sample_ids",
@@ -388,15 +450,24 @@ def run(input_path: str, output_dir: str) -> None:
     for row in canon_rows:
         partitions.setdefault((row["series"], row["metric"]), []).append(row)
 
+    # Every window of a series shares its origin, so the bounded widest-path
+    # search is run once per series and reused across that series' windows.
+    exposure_cache: dict[str, tuple[int, int, str, list[str]]] = {}
+
     windows: list[dict] = []
     for (series, metric), part in partitions.items():
         if not any(not r["suppressed"] for r in part):
             continue
         win = build_window(series, metric, part)
-        reach, score, path = exposure(series, graph)
-        win["exposure_reachable_series"] = reach
+        cached = exposure_cache.get(series)
+        if cached is None:
+            cached = exposure(series, graph)
+            exposure_cache[series] = cached
+        score, reachable, target, path = cached
         win["exposure_score"] = score
-        win["exposure_strongest_path"] = path
+        win["exposure_reachable_count"] = reachable
+        win["exposure_widest_target"] = target
+        win["exposure_strongest_path"] = list(path)
         windows.append(win)
 
     # per-series ledger across each series' windows sorted by start_ts.

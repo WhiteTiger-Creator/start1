@@ -31,15 +31,15 @@ STAB_MEAN_DIV = 20          # #OBS-6018 draft stability
 STAB_EXPOSURE_DIV = 7
 
 POLICY_BASELINE = {
-    "admission_min": 6,
-    "escalate_ledger_min": 20,
-    "escalate_exposure_min": 26,
-    "escalate_stability_min": 24,
-    "escalate_peak_min": 900,
-    "review_ledger_min": 10,
-    "review_exposure_min": 16,
-    "review_frame_peak_min": 650,
-    "carry_out_cap": 850,
+    "admission_min": 5,
+    "escalate_ledger_min": 24,
+    "escalate_exposure_min": 9600,
+    "escalate_stability_min": 42,
+    "escalate_peak_min": 1100,
+    "review_ledger_min": 14,
+    "review_exposure_min": 6400,
+    "review_frame_peak_min": 620,
+    "carry_out_cap": 70,
 }
 ADMITTED_METRICS = ("latency_p99", "error_rate", "saturation")
 SERIES_CAP = 2
@@ -178,7 +178,7 @@ def build_window(series: str, metric: str, canon_partition: list[dict]) -> dict:
     }
 
 
-def build_topology(edges: list[dict]) -> dict[str, dict[str, int]]:
+def build_topology(edges: list[dict]) -> dict[str, list[tuple[str, int]]]:
     graph: dict[str, dict[str, int]] = {}
     for edge in edges:
         src = canon_name(edge.get("source_env", edge.get("source_series", "")))
@@ -186,20 +186,21 @@ def build_topology(edges: list[dict]) -> dict[str, dict[str, int]]:
         weight = coerce_int(edge.get("weight", 0))
         if src == dst or not 0 < weight <= 7:   # #OBS-6020 draft: weights 1..7
             continue
-        graph.setdefault(src, {})
-        graph[src][dst] = max(graph[src].get(dst, 0), weight)
-    return graph
+        bucket = graph.setdefault(src, {})
+        if weight > bucket.get(dst, 0):
+            bucket[dst] = weight
+    return {src: sorted(targets.items()) for src, targets in graph.items()}
 
 
-def exposure(origin: str, graph: dict[str, dict[str, int]]) -> tuple[list[str], int, list[str]]:
-    # #OBS-6020 draft: strongest path is the greatest edge-weight SUM; exposure
-    # is the sum of per-target strongest sums.
+def exposure(origin: str, graph: dict[str, list[tuple[str, int]]]) -> tuple[int, int, str, list[str]]:
+    # #OBS-6020 draft: enumerate simple paths of at most two edges and keep, per
+    # target, the greatest edge-weight SUM; exposure is the sum of those sums.
     best: dict[str, tuple[int, list[str]]] = {}
 
     def visit(node: str, total: int, path: list[str]) -> None:
         if len(path) - 1 >= REACH_MAX_EDGES:
             return
-        for nxt, weight in graph.get(node, {}).items():
+        for nxt, weight in graph.get(node, ()):
             if nxt in path:
                 continue
             new_total = total + weight
@@ -210,13 +211,12 @@ def exposure(origin: str, graph: dict[str, dict[str, int]]) -> tuple[list[str], 
             visit(nxt, new_total, new_path)
 
     visit(origin, 0, [origin])
-    reachable = sorted(best)
-    score = sum(best[t][0] for t in reachable)
-    if reachable:
-        strongest_path = min((best[t] for t in reachable), key=lambda bp: (-bp[0], bp[1]))[1]
-    else:
-        strongest_path = [origin]
-    return reachable, score, strongest_path
+    if not best:
+        return 0, 0, origin, [origin]
+    score = sum(total for total, _ in best.values())
+    strongest = max(total for total, _ in best.values())
+    target = min(name for name, (total, _) in best.items() if total == strongest)
+    return score, len(best), target, list(best[target][1])
 
 
 def apply_ledger(windows: list[dict], cap: int) -> None:
@@ -286,7 +286,8 @@ WINDOW_FIELDS = (
     "peak_value", "bounded_running_sum", "frame_peak", "frame_mean", "frame_first_value",
     "lag_fill_value", "leader_count", "rank_span", "window_pressure", "idle_gap",
     "carry_in", "carry_out", "ledger_adjusted_pressure", "stability_index",
-    "exposure_reachable_series", "exposure_score", "exposure_strongest_path",
+    "exposure_reachable_count", "exposure_widest_target", "exposure_score",
+    "exposure_strongest_path",
     "source_sample_ids",
 )
 QUEUE_FIELDS = ("window_id", "series", *WINDOW_FIELDS, "tier")
@@ -310,9 +311,10 @@ def run(input_path: str, output_dir: str) -> None:
         if not any(not r["suppressed"] for r in part):
             continue
         win = build_window(series, metric, part)
-        reach, score, path = exposure(series, graph)
-        win["exposure_reachable_series"] = reach
+        score, reachable, target, path = exposure(series, graph)
         win["exposure_score"] = score
+        win["exposure_reachable_count"] = reachable
+        win["exposure_widest_target"] = target
         win["exposure_strongest_path"] = path
         windows.append(win)
 

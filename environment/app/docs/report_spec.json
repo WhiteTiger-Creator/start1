@@ -8,7 +8,11 @@
       "series_topology_edges": "/app/data/series_topology_edges.json",
       "metric_policies": "/app/data/metric_policies.json"
     },
-    "prohibited_imports": ["sqlite3", "pandas", "duckdb"]
+    "prohibited_imports": [
+      "sqlite3",
+      "pandas",
+      "duckdb"
+    ]
   },
   "output_files": {
     "summary_json": "summary.json",
@@ -29,13 +33,43 @@
       "type": "boolean",
       "input_coercion": "booleans unchanged; strings true/1/yes after str(...).strip().lower() -> true; other strings -> false; other types -> bool(value)"
     },
-    "series": {"type": "string"},
-    "metric": {"type": "string"},
-    "tier": {"type": "string", "enum": ["escalate", "review", "watch"]},
-    "tier_counts": {"type": "object", "keys": ["escalate", "review", "watch"]},
-    "exposure_reachable_series": {"type": "array", "items": "string", "order": "ascending"},
-    "exposure_strongest_path": {"type": "array", "items": "string"},
-    "source_sample_ids": {"type": "array", "items": "string", "order": "ascending"}
+    "series": {
+      "type": "string"
+    },
+    "metric": {
+      "type": "string"
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "escalate",
+        "review",
+        "watch"
+      ]
+    },
+    "tier_counts": {
+      "type": "object",
+      "keys": [
+        "escalate",
+        "review",
+        "watch"
+      ]
+    },
+    "exposure_reachable_count": {
+      "type": "integer"
+    },
+    "exposure_widest_target": {
+      "type": "string"
+    },
+    "exposure_strongest_path": {
+      "type": "array",
+      "items": "string"
+    },
+    "source_sample_ids": {
+      "type": "array",
+      "items": "string",
+      "order": "ascending"
+    }
   },
   "series_windows_json": {
     "output_path": "series_windows.json",
@@ -43,11 +77,30 @@
     "key_sort": "ascending",
     "item_sort": "start_ts ascending",
     "required_fields": [
-      "start_ts", "end_ts", "span_ms", "sample_count", "canonical_sample_count", "metric",
-      "peak_value", "bounded_running_sum", "frame_peak", "frame_mean", "frame_first_value",
-      "lag_fill_value", "leader_count", "rank_span", "window_pressure", "idle_gap",
-      "carry_in", "carry_out", "ledger_adjusted_pressure", "stability_index",
-      "exposure_reachable_series", "exposure_score", "exposure_strongest_path",
+      "start_ts",
+      "end_ts",
+      "span_ms",
+      "sample_count",
+      "canonical_sample_count",
+      "metric",
+      "peak_value",
+      "bounded_running_sum",
+      "frame_peak",
+      "frame_mean",
+      "frame_first_value",
+      "lag_fill_value",
+      "leader_count",
+      "rank_span",
+      "window_pressure",
+      "idle_gap",
+      "carry_in",
+      "carry_out",
+      "ledger_adjusted_pressure",
+      "stability_index",
+      "exposure_reachable_count",
+      "exposure_widest_target",
+      "exposure_score",
+      "exposure_strongest_path",
       "source_sample_ids"
     ]
   },
@@ -56,12 +109,34 @@
     "container": "one compact JSON object per line, json.dumps(..., separators=(',', ':'))",
     "window_id_format": "{series}:{metric}:{start_ts}-{end_ts}",
     "required_fields": [
-      "window_id", "series", "start_ts", "end_ts", "span_ms", "sample_count",
-      "canonical_sample_count", "metric", "peak_value", "bounded_running_sum", "frame_peak",
-      "frame_mean", "frame_first_value", "lag_fill_value", "leader_count", "rank_span",
-      "window_pressure", "idle_gap", "carry_in", "carry_out", "ledger_adjusted_pressure",
-      "stability_index", "exposure_reachable_series", "exposure_score",
-      "exposure_strongest_path", "source_sample_ids", "tier"
+      "window_id",
+      "series",
+      "start_ts",
+      "end_ts",
+      "span_ms",
+      "sample_count",
+      "canonical_sample_count",
+      "metric",
+      "peak_value",
+      "bounded_running_sum",
+      "frame_peak",
+      "frame_mean",
+      "frame_first_value",
+      "lag_fill_value",
+      "leader_count",
+      "rank_span",
+      "window_pressure",
+      "idle_gap",
+      "carry_in",
+      "carry_out",
+      "ledger_adjusted_pressure",
+      "stability_index",
+      "exposure_reachable_count",
+      "exposure_widest_target",
+      "exposure_score",
+      "exposure_strongest_path",
+      "source_sample_ids",
+      "tier"
     ]
   },
   "summary_json": {
@@ -69,14 +144,31 @@
     "container": "object",
     "schema_version": "obs-window-v1",
     "required_fields": [
-      "schema_version", "raw_sample_count", "unique_sample_ids", "canonical_sample_count",
-      "series_count", "partition_count", "suppressed_excluded_count", "tier_counts",
-      "total_span_ms", "total_bounded_running_sum", "total_window_pressure",
-      "total_ledger_adjusted_pressure", "longest_window_ms", "queued_window_count",
-      "max_window_pressure", "max_ledger_adjusted_pressure", "max_stability_index",
-      "max_exposure_score", "max_carry_out"
+      "schema_version",
+      "raw_sample_count",
+      "unique_sample_ids",
+      "canonical_sample_count",
+      "series_count",
+      "partition_count",
+      "suppressed_excluded_count",
+      "tier_counts",
+      "total_span_ms",
+      "total_bounded_running_sum",
+      "total_window_pressure",
+      "total_ledger_adjusted_pressure",
+      "longest_window_ms",
+      "queued_window_count",
+      "max_window_pressure",
+      "max_ledger_adjusted_pressure",
+      "max_stability_index",
+      "max_exposure_score",
+      "max_carry_out"
     ],
-    "tier_counts_key_order": ["escalate", "review", "watch"]
+    "tier_counts_key_order": [
+      "escalate",
+      "review",
+      "watch"
+    ]
   },
   "policy_source": {
     "path": "/app/data/metric_policies.json",
@@ -85,5 +177,6 @@
   "topology_source": {
     "path": "/app/data/series_topology_edges.json",
     "shape": "[{\"source_series\": str, \"target_series\": str, \"weight\": int}, ...]"
-  }
+  },
+  "runtime_budget_seconds": 120
 }

@@ -6,61 +6,95 @@ author_name = "Jonathan"
 author_email = "jtolbert0175@gmail.com"
 difficulty_explanation = '''
 Restoring this reconciler is the work of a platform-observability or telemetry-platform engineer
-responding to a botched rollout, and it is a genuinely dependent chain rather than a single repair. The
-rollout truncated the authoritative sample stream, so the first step is to rebuild /app/data/events.json
-by merging a pre-rollout snapshot with a replay journal under the board's final recovery decision --
+responding to a botched rollout, and it is a genuinely dependent chain rather than a single repair.
+All of the data is synthetic: the series names, the sample stream, the dependency topology and the
+governance archive were generated for this task and describe no real system or person. The rollout
+truncated the authoritative sample stream, so the first step is to rebuild /app/data/events.json by
+merging a pre-rollout snapshot with a replay journal under the board's final recovery decision --
 in-place overwrite of a replayed sample_id, full retraction of a retracted one, journal bookkeeping
-fields stripped, and a specific resulting order that the later deduplication tie-break depends on. Every
-downstream artifact is wrong if that merge is wrong, and two superseded recovery entries (a February
-draft that says to concatenate and let deduplication sort it out, a March interim that appends replayed
-samples at the end and narrows retractions) are there to be traced past. Only then can the engineer
-reconstruct the governance-defined window-function pipeline itself from a long, mostly-noise decision
-log rather than a specification: the default window frame, the ranking gap rule, the ts/NULL ordering,
-the widest-path exposure metric over the series dependency graph, the stateful per-series pressure
-ledger with idle-gap decay and carry-out cap, the admission floors, tiering and the capacity-capped
-queue ordering all have to be traced to their FINAL dated decision, with each rounding direction fixed
-independently. Many of those rules deliberately deviate from vanilla SQL / SQLite window semantics, so
-loading the samples into sqlite3, pandas or duckdb and delegating produces wrong answers and is
-rejected. Holding the recovery semantics and the whole interacting rule set in mind at once is what
-separates a correct reconstruction from a plausible-looking one.
+fields stripped, and a specific resulting order that the later deduplication tie-break depends on.
+Every downstream artifact is wrong if that merge is wrong, and two superseded recovery entries (a
+February draft that says to concatenate and let deduplication sort it out, a March interim that
+appends replayed samples at the end and narrows retractions) are there to be traced past. Only then
+can the engineer reconstruct the governance-defined window-function pipeline itself from a long,
+mostly-noise decision log rather than a specification: the default window frame, the ranking gap
+rule, the ts/NULL ordering, the widest-path exposure metric over the series dependency graph, the
+stateful per-series pressure ledger with idle-gap decay and carry-out cap, the admission floors,
+tiering and the capacity-capped queue ordering all have to be traced to their FINAL dated decision,
+with each rounding direction fixed independently. Many of those rules deliberately deviate from
+vanilla SQL / SQLite window semantics, so loading the samples into sqlite3, pandas or duckdb and
+delegating produces wrong answers and is rejected. What turns the exposure stage from a rule to an
+engineering problem is scale plus a clock. The shipped topology carries roughly three thousand
+series and thirty thousand weighted directed edges, the stream carries tens of thousands of samples
+across thousands of windows, and the final decision widens bounded reachability from three edges to
+six, at which point most origins reach thousands of series. instruction.md, the output contract and
+the verifier all impose a 120-second wall-clock budget on one full run. The shipped reconciler walks
+the bounded paths out per window, and that formulation -- however faithfully its rules are repaired
+-- needs tens of minutes on the shipped topology and cannot finish inside the budget. To fit, the
+engineer has to see that a maximin bottleneck is a relaxation rather than an enumeration, expand a
+node again only when a later hop reaches it with a strictly wider bottleneck, reconstruct the
+governance tie-break walk from a backward pass over the remaining hop budget rather than by
+searching, and reuse one exposure result across every window of the same series; the reference lands
+around a fifth of the budget. Holding the recovery semantics, the whole interacting rule set and
+that runtime ceiling in mind at once is what separates a correct reconstruction from a
+plausible-looking one.
 '''
 solution_explanation = '''
 solution/solve.sh drives the two dependent steps inside the environment container. Step one runs
-solution/recover_stream.py, which implements the board's final recovery decision (#OBS-6170): start from
-/app/data/events_snapshot_pre_rollout.json in file order, replay /app/data/events_replay_journal.json in
-ascending journal_seq order, overwrite the first record already holding an appended sample_id in place,
-append genuinely new samples at the end, drop every record named by a retraction, strip journal_seq /
-journal_op / reason, and write the rebuilt array back over the truncated /app/data/events.json. Step two
-copies solution/export_report_fixed.py over /app/workflow/export_report.py and runs it against that
-recovered stream. The reconciler canonicalizes and deduplicates samples under the final governance
-tie-break chain, orders each (series, metric) partition, computes framed aggregates on the bounded
-ROWS-2-PRECEDING default frame, a capped-gap ranking, the frame-relative value functions, a stateful
-per-series pressure ledger (ceil idle-gap decay, ceil carry-in credit, ceil exposure backlog, carry-out
-cap), a widest-path (maximin bottleneck) exposure score over the series topology within three edges,
-then admits, tiers and orders the review queue and applies the per-series capacity cap after ordering.
-It writes exactly summary.json, series_windows.json and compact review_queue.jsonl into --output-dir.
-Every governing value is traced to its final entry in /app/incident/metrics_governance_log.md;
-report_spec.json supplies only the output contract and no derivation rule.
+solution/recover_stream.py, which implements the board's final recovery decision (#OBS-6170): start
+from /app/data/events_snapshot_pre_rollout.json in file order, replay
+/app/data/events_replay_journal.json in ascending journal_seq order, overwrite the first record
+already holding an appended sample_id in place, append genuinely new samples at the end, drop every
+record named by a retraction, strip journal_seq / journal_op / reason, and write the rebuilt array
+back over the truncated /app/data/events.json. Step two copies solution/export_report_fixed.py over
+/app/workflow/export_report.py and runs it against that recovered stream. The reconciler
+canonicalizes and deduplicates samples under the final governance tie-break chain, orders each
+(series, metric) partition, computes framed aggregates on the bounded ROWS-2-PRECEDING default
+frame, a capped-gap ranking, the frame-relative value functions, a stateful per-series pressure
+ledger (ceil idle-gap decay, ceil carry-in credit, ceil exposure backlog, carry-out cap), then
+admits, tiers and orders the review queue and applies the per-series capacity cap after ordering.
+Exposure (#OBS-6180) is a bounded widest-path search over walks of at most six edges: the greatest
+bottleneck per reachable target is relaxed one hop layer at a time and a node is re-expanded only
+when a later layer reaches it with a strictly wider bottleneck, which is what keeps the search
+linear in the reachable subgraph instead of exponential in the hop bound. The governance
+lexicographically-smallest walk to the widest target is then read forward against a backward maximin
+pass that records, for every node and every remaining hop budget, the widest walk on to that target,
+so the tie-break needs no search either. Exposure depends only on the origin series, so it is
+computed once per series and reused by every window of that series. It writes exactly summary.json,
+series_windows.json and compact review_queue.jsonl into --output-dir. Every governing value is
+traced to its final entry in /app/incident/metrics_governance_log.md; report_spec.json supplies only
+the output contract and no derivation rule.
 '''
 verification_explanation = '''
 The separate verifier (tests/Dockerfile builds an isolated image the agent cannot see) collects the
 agent's whole /app as the declared artifact and runs tests/test_outputs.py against it. Step one is
-graded directly: the recovered /app/data/events.json must equal the sealed expected stream, must carry
-only sample fields, and the shipped truncated file, the snapshot alone and the superseded concatenation
-merge are each asserted different from it -- then the agent's own reconciler is re-run on all three
-wrong streams and required to disagree with the sealed outputs, which is what makes the two steps
-provably dependent. Step two executes the agent's /app/workflow/export_report.py as a subprocess under
-an unprivileged uid (setpriv 65534, scrubbed environment) over both the recovered stream and a held-out
-alternate stream, and diffs summary.json, series_windows.json and review_queue.jsonl against sealed
-fixtures generated from the reference. It also checks schema/field/sort/tiering invariants, summary
-math, idempotency, the CLI defaults, and that the topology and policy paths actually influence output. A
-static AST scan forbids importing sqlite3/pandas/duckdb, and two dedicated tests prove the governance
-dialect deviates from standard SQL: a sqlite3 delegate using the SQL default frame and SQL RANK
-disagrees with the reconciler's bounded frame (240 not the 420 running total) and capped rank span (4
-not 5). The frozen broken snapshot /app/workflow/.export_report.original is asserted present and wrong
-by hash. Confirmed locally in the real two-container flow: after solve.sh the verifier gives reward 1; a
-fresh environment with no solve.sh gives 0, and so does an environment where the reconciler is repaired
-but the stream is never recovered.
+graded directly: the recovered /app/data/events.json must equal the sealed expected stream, must
+carry only sample fields, and the shipped truncated file, the snapshot alone, the superseded
+concatenation merge and the superseded append-at-the-end interim merge are each asserted different
+from it -- then the agent's own reconciler is re-run on those wrong streams and required to disagree
+with the sealed outputs, which is what makes the two steps provably dependent. Step two executes the
+agent's /app/workflow/export_report.py as a subprocess under an unprivileged uid (setpriv 65534,
+scrubbed environment, inputs staged into a candidate-writable work area) over both the recovered
+stream and a held-out alternate stream, and diffs summary.json, series_windows.json and
+review_queue.jsonl against sealed fixtures generated from the reference. Each graded stream is run
+once per session and every test reuses that run: the suite times those two runs and asserts each
+finished inside the 120-second wall-clock budget that instruction.md and report_spec.json state (the
+reference needs about a fifth of it; walking the bounded paths out per window needs tens of
+minutes), and a hard subprocess timeout keeps a runaway submission from consuming the verifier
+timeout. It also checks schema/field/sort/tiering invariants, summary math, the carry-out cap, that
+exposure is one result per origin series, and that the shipped inputs really are at the scale the
+budget assumes. The cheap probes -- idempotency, the CLI defaults, and the proof that the topology
+and policy paths actually influence output -- deliberately use a small inline stream so the whole
+suite stays near two minutes. Two hand-computed micro-topologies pin the exposure dialect: the
+maximin bottleneck sum against an edge-weight-sum reading, the six-edge bound against a target one
+hop too far, and the lexicographically-smallest-walk tie-break. A static AST scan forbids importing
+sqlite3/pandas/duckdb, and a dedicated test proves the governance dialect deviates from standard
+SQL: a sqlite3 delegate using the SQL default frame and SQL RANK disagrees with the reconciler's
+bounded frame (240 not the 420 running total) and capped rank span (4 not 5). The frozen broken
+snapshot /app/workflow/.export_report.original is asserted present by hash and wrong by output,
+without pinning what it emits. Confirmed locally in the real two-container flow: after solve.sh the
+verifier gives reward 1 on repeated fresh artifacts; a fresh environment with no solve.sh gives 0,
+and so does an environment where the reconciler is repaired but the stream is never recovered.
 '''
 relevant_experience = '''
 Experience recovering a corrupted event stream from a snapshot plus a replay journal under
@@ -71,7 +105,7 @@ avoiding SQL-engine delegation where the governing dialect diverges from standar
 '''
 category = "Software"
 subcategory = "Systems"
-tags = ["observability", "window-functions", "incident-response", "data-recovery", "data-reconciliation"]
+tags = ["observability", "window-functions", "incident-response", "data-recovery", "graph-algorithms"]
 expert_time_estimate_hours = 4
 difficulty = "advanced"
 languages = ["python"]
@@ -84,7 +118,7 @@ storage_mb = 10240
 network_mode = "no-network"
 
 [agent]
-timeout_sec = 3600
+timeout_sec = 5400
 
 [verifier]
 timeout_sec = 1800
